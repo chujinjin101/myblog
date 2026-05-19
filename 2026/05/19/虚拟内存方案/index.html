@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/myblog/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/myblog/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/myblog/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/myblog/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/myblog/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"chujinjin101.github.io","root":"/myblog/","images":"/myblog/images","scheme":"Pisces","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/myblog/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/myblog/js/config.js" defer></script>
+
+    <meta name="description" content="Expandable Segments 特性设计与实现文档一、背景与动机1.1 问题场景在深度学习推理场景中，batch size 经常会动态变化。当程序以 batch size N 运行时，分配器会创建适合该大小的内存段。当 batch size 变为 N+1 时，需要分配略大的新段，而旧段中会留下无法复用的”碎片”（slivers）。 代码注释（NPUCachingAllocator.cpp:">
+<meta property="og:type" content="article">
+<meta property="og:title" content="虚拟内存方案">
+<meta property="og:url" content="https://chujinjin101.github.io/myblog/2026/05/19/%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E6%96%B9%E6%A1%88/index.html">
+<meta property="og:site_name" content="chu的技术博客">
+<meta property="og:description" content="Expandable Segments 特性设计与实现文档一、背景与动机1.1 问题场景在深度学习推理场景中，batch size 经常会动态变化。当程序以 batch size N 运行时，分配器会创建适合该大小的内存段。当 batch size 变为 N+1 时，需要分配略大的新段，而旧段中会留下无法复用的”碎片”（slivers）。 代码注释（NPUCachingAllocator.cpp:">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-05-19T08:33:04.000Z">
+<meta property="article:modified_time" content="2026-05-19T03:12:42.612Z">
+<meta property="article:author" content="chujinjin">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://chujinjin101.github.io/myblog/2026/05/19/%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E6%96%B9%E6%A1%88/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://chujinjin101.github.io/myblog/2026/05/19/%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E6%96%B9%E6%A1%88/","path":"2026/05/19/虚拟内存方案/","title":"虚拟内存方案"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>虚拟内存方案 | chu的技术博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/myblog/js/utils.js" defer></script><script src="/myblog/js/motion.js" defer></script><script src="/myblog/js/sidebar.js" defer></script><script src="/myblog/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/myblog/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/myblog/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/myblog/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">chu的技术博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/myblog/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/myblog/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-tags"><a href="/myblog/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Expandable-Segments-%E7%89%B9%E6%80%A7%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E6%96%87%E6%A1%A3"><span class="nav-number">1.</span> <span class="nav-text">Expandable Segments 特性设计与实现文档</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E8%83%8C%E6%99%AF%E4%B8%8E%E5%8A%A8%E6%9C%BA"><span class="nav-number">1.1.</span> <span class="nav-text">一、背景与动机</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-%E9%97%AE%E9%A2%98%E5%9C%BA%E6%99%AF"><span class="nav-number">1.1.1.</span> <span class="nav-text">1.1 问题场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-%E8%A7%A3%E5%86%B3%E6%80%9D%E8%B7%AF"><span class="nav-number">1.1.2.</span> <span class="nav-text">1.2 解决思路</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84"><span class="nav-number">1.2.</span> <span class="nav-text">二、整体架构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-%E6%9E%B6%E6%9E%84%E5%9B%BE"><span class="nav-number">1.2.1.</span> <span class="nav-text">2.1 架构图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-%E6%A0%B8%E5%BF%83%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99"><span class="nav-number">1.2.2.</span> <span class="nav-text">2.2 核心设计原则</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E9%85%8D%E7%BD%AE%E7%B3%BB%E7%BB%9F"><span class="nav-number">1.3.</span> <span class="nav-text">三、配置系统</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-%E9%85%8D%E7%BD%AE%E5%85%A5%E5%8F%A3"><span class="nav-number">1.3.1.</span> <span class="nav-text">3.1 配置入口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-%E9%85%8D%E7%BD%AE%E8%A7%A3%E6%9E%90%E6%B5%81%E7%A8%8B"><span class="nav-number">1.3.2.</span> <span class="nav-text">3.2 配置解析流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-%E8%BF%90%E8%A1%8C%E6%97%B6%E4%BF%AE%E6%94%B9"><span class="nav-number">1.3.3.</span> <span class="nav-text">3.3 运行时修改</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-%E5%85%B3%E9%94%AE%E5%B8%B8%E9%87%8F"><span class="nav-number">1.3.4.</span> <span class="nav-text">3.4 关键常量</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E6%A0%B8%E5%BF%83%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">1.4.</span> <span class="nav-text">四、核心数据结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-ExpandableSegment"><span class="nav-number">1.4.1.</span> <span class="nav-text">4.1 ExpandableSegment</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-Block%EF%BC%88%E6%89%A9%E5%B1%95%E5%AD%97%E6%AE%B5%EF%BC%89"><span class="nav-number">1.4.2.</span> <span class="nav-text">4.2 Block（扩展字段）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-BlockPool%EF%BC%88%E6%89%A9%E5%B1%95%E5%AD%97%E6%AE%B5%EF%BC%89"><span class="nav-number">1.4.3.</span> <span class="nav-text">4.3 BlockPool（扩展字段）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-4-SegmentRange"><span class="nav-number">1.4.4.</span> <span class="nav-text">4.4 SegmentRange</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94%E3%80%81%E6%A0%B8%E5%BF%83%E6%B5%81%E7%A8%8B%E4%BB%A3%E7%A0%81%E8%B5%B0%E8%AF%BB"><span class="nav-number">1.5.</span> <span class="nav-text">五、核心流程代码走读</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D%E6%B5%81%E7%A8%8B"><span class="nav-number">1.5.1.</span> <span class="nav-text">5.1 内存分配流程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#5-1-1-%E6%80%BB%E5%85%A5%E5%8F%A3%EF%BC%9Aalloc-block"><span class="nav-number">1.5.1.1.</span> <span class="nav-text">5.1.1 总入口：alloc_block</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-1-2-%E6%9F%A5%E6%89%BE%E5%8F%AF%E6%89%A9%E5%B1%95%E5%9D%97%EF%BC%9Afind-expandable-block"><span class="nav-number">1.5.1.2.</span> <span class="nav-text">5.1.2 查找可扩展块：find_expandable_block</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-1-3-%E6%98%A0%E5%B0%84%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98%EF%BC%9Amap-block"><span class="nav-number">1.5.1.3.</span> <span class="nav-text">5.1.3 映射物理内存：map_block</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-1-4-ExpandableSegment-map%EF%BC%88%E5%BA%95%E5%B1%82%E6%98%A0%E5%B0%84%EF%BC%89"><span class="nav-number">1.5.1.4.</span> <span class="nav-text">5.1.4 ExpandableSegment::map（底层映射）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-1-5-%E7%BB%84%E5%90%88%E5%88%86%E9%85%8D%EF%BC%9Atry-allocate-expandable-block"><span class="nav-number">1.5.1.5.</span> <span class="nav-text">5.1.5 组合分配：try_allocate_expandable_block</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-%E5%86%85%E5%AD%98%E9%87%8A%E6%94%BE%E6%B5%81%E7%A8%8B"><span class="nav-number">1.5.2.</span> <span class="nav-text">5.2 内存释放流程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#5-2-1-free-block-%E4%B8%AD%E7%9A%84%E7%89%B9%E6%AE%8A%E5%A4%84%E7%90%86"><span class="nav-number">1.5.2.1.</span> <span class="nav-text">5.2.1 free_block 中的特殊处理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-2-2-unmap-block%EF%BC%9A%E8%A7%A3%E9%99%A4%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98%E6%98%A0%E5%B0%84"><span class="nav-number">1.5.2.2.</span> <span class="nav-text">5.2.2 unmap_block：解除物理内存映射</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-2-3-release-expandable-segment%EF%BC%9A%E9%87%8A%E6%94%BE%E6%95%B4%E4%B8%AA%E5%8F%AF%E6%89%A9%E5%B1%95%E6%AE%B5"><span class="nav-number">1.5.2.3.</span> <span class="nav-text">5.2.3 release_expandable_segment：释放整个可扩展段</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-2-4-release-blocks%EF%BC%9A%E6%89%B9%E9%87%8F%E9%87%8A%E6%94%BE"><span class="nav-number">1.5.2.4.</span> <span class="nav-text">5.2.4 release_blocks：批量释放</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-OOM-%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B"><span class="nav-number">1.5.3.</span> <span class="nav-text">5.3 OOM 处理流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-4-Cache-%E6%B8%85%E7%90%86%E6%B5%81%E7%A8%8B"><span class="nav-number">1.5.4.</span> <span class="nav-text">5.4 Cache 清理流程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#emptyCache%EF%BC%88%E5%AE%8C%E5%85%A8%E6%B8%85%E7%90%86%EF%BC%89"><span class="nav-number">1.5.4.1.</span> <span class="nav-text">emptyCache（完全清理）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#emptyVirtAddrCache%EF%BC%88%E4%BB%85%E6%B8%85%E7%90%86%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80%E7%BC%93%E5%AD%98%EF%BC%89"><span class="nav-number">1.5.4.2.</span> <span class="nav-text">emptyVirtAddrCache（仅清理虚拟地址缓存）</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD%E3%80%81%E5%85%B3%E9%94%AE%E7%AD%96%E7%95%A5%E8%AF%A6%E8%A7%A3"><span class="nav-number">1.6.</span> <span class="nav-text">六、关键策略详解</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-%E6%9C%80%E4%BD%8E%E5%9C%B0%E5%9D%80%E4%BC%98%E5%85%88%E5%88%86%E9%85%8D"><span class="nav-number">1.6.1.</span> <span class="nav-text">6.1 最低地址优先分配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-Best-Fit-%E6%90%9C%E7%B4%A2%E4%B8%AD%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E5%A4%A7%E5%B0%8F"><span class="nav-number">1.6.2.</span> <span class="nav-text">6.2 Best-Fit 搜索中的可扩展大小</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-should-split-%E7%AD%96%E7%95%A5%E5%B7%AE%E5%BC%82"><span class="nav-number">1.6.3.</span> <span class="nav-text">6.3 should_split 策略差异</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-4-%E7%89%A9%E7%90%86%E5%8F%A5%E6%9F%84%E7%BC%93%E5%AD%98%E6%9C%BA%E5%88%B6"><span class="nav-number">1.6.4.</span> <span class="nav-text">6.4 物理句柄缓存机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-5-try-merge-blocks-%E7%9A%84%E6%98%A0%E5%B0%84%E7%8A%B6%E6%80%81%E7%BA%A6%E6%9D%9F"><span class="nav-number">1.6.5.</span> <span class="nav-text">6.5 try_merge_blocks 的映射状态约束</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%83%E3%80%81ExpandableSegment-%E6%9E%84%E9%80%A0%E4%B8%8E%E6%9E%90%E6%9E%84"><span class="nav-number">1.7.</span> <span class="nav-text">七、ExpandableSegment 构造与析构</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-1-%E6%9E%84%E9%80%A0%EF%BC%9A%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4%E9%A2%84%E7%95%99"><span class="nav-number">2.</span> <span class="nav-text">7.1 构造：虚拟地址空间预留</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B9%9D%E3%80%81IPC-%E5%85%B1%E4%BA%AB%E6%94%AF%E6%8C%81"><span class="nav-number">2.1.</span> <span class="nav-text">九、IPC 共享支持</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#9-1-share%EF%BC%9A%E5%AF%BC%E5%87%BA%E5%85%B1%E4%BA%AB%E5%8F%A5%E6%9F%84"><span class="nav-number">2.1.1.</span> <span class="nav-text">9.1 share：导出共享句柄</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-2-fromShared%EF%BC%9A%E5%AF%BC%E5%85%A5%E5%85%B1%E4%BA%AB%E5%8F%A5%E6%9F%84"><span class="nav-number">2.1.2.</span> <span class="nav-text">9.2 fromShared：导入共享句柄</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%81%E3%80%81HCCL-%E9%80%9A%E4%BF%A1%E9%9B%86%E6%88%90"><span class="nav-number">2.2.</span> <span class="nav-text">十、HCCL 通信集成</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%81%E4%B8%80%E3%80%81Snapshot-%E4%B8%AD%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%AE%B5%E8%A1%A8%E7%A4%BA"><span class="nav-number">2.3.</span> <span class="nav-text">十一、Snapshot 中的可扩展段表示</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%81%E4%BA%8C%E3%80%81%E5%AE%8C%E6%95%B4%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E6%B5%81%E7%A8%8B%E5%9B%BE"><span class="nav-number">2.4.</span> <span class="nav-text">十二、完整生命周期流程图</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%81%E4%B8%89%E3%80%81%E4%B8%8E%E4%BC%A0%E7%BB%9F%E6%A8%A1%E5%BC%8F%E7%9A%84%E5%AF%B9%E6%AF%94%E6%80%BB%E7%BB%93"><span class="nav-number">2.5.</span> <span class="nav-text">十三、与传统模式的对比总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%81%E5%9B%9B%E3%80%81%E5%B7%B2%E7%9F%A5%E9%99%90%E5%88%B6"><span class="nav-number">2.6.</span> <span class="nav-text">十四、已知限制</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="chujinjin"
+      src="/myblog/images/mine.jpg">
+  <p class="site-author-name" itemprop="name">chujinjin</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/myblog/archives/">
+          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/chujinjin101" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;chujinjin101" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:you@example.com" title="Email → mailto:you@example.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>Email</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+        <div class="back-to-top animated" role="button" aria-label="返回顶部">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://chujinjin101.github.io/myblog/2026/05/19/%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E6%96%B9%E6%A1%88/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/myblog/images/mine.jpg">
+      <meta itemprop="name" content="chujinjin">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="chu的技术博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="虚拟内存方案 | chu的技术博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          虚拟内存方案
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2026-05-19 16:33:04 / 修改时间：11:12:42" itemprop="dateCreated datePublished" datetime="2026-05-19T16:33:04+08:00">2026-05-19</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="Expandable-Segments-特性设计与实现文档"><a href="#Expandable-Segments-特性设计与实现文档" class="headerlink" title="Expandable Segments 特性设计与实现文档"></a>Expandable Segments 特性设计与实现文档</h1><h2 id="一、背景与动机"><a href="#一、背景与动机" class="headerlink" title="一、背景与动机"></a>一、背景与动机</h2><h3 id="1-1-问题场景"><a href="#1-1-问题场景" class="headerlink" title="1.1 问题场景"></a>1.1 问题场景</h3><p>在深度学习推理场景中，batch size 经常会动态变化。当程序以 batch size N 运行时，分配器会创建适合该大小的内存段。当 batch size 变为 N+1 时，需要分配略大的新段，而旧段中会留下无法复用的”碎片”（slivers）。</p>
+<p>代码注释（<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L318-L341">NPUCachingAllocator.cpp:318-341</a>）描述了这一经典问题：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">传统模式下的内存布局（batch size 从 N 变为 N+1）：</span><br><span class="line"></span><br><span class="line">段1: [A(N*A)    | 空闲sliver]   ← 空间不够放 (N+1)*A，但空闲部分无法被其他段复用</span><br><span class="line">段2: [B(N*A*B)  | 空闲sliver]   ← 同理</span><br><span class="line">段3: [C(N*C)    | 空闲sliver]   ← 同理</span><br><span class="line">...</span><br><span class="line">段50: [需要新malloc (N+1)*A*B]  ← 必须新分配，可能OOM</span><br><span class="line"></span><br><span class="line">50+ 层的模型可能产生 50+ 个 slivers，大量内存被浪费。</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-2-解决思路"><a href="#1-2-解决思路" class="headerlink" title="1.2 解决思路"></a>1.2 解决思路</h3><p>Expandable Segments 的核心思想：<strong>不是每次分配创建一个独立段，而是为每个 stream 创建一个可增长的段，所有分配紧密排列在其中</strong>。当需要更多空间时，在段末尾追加物理内存页。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Expandable 模式下的内存布局：</span><br><span class="line"></span><br><span class="line">段1: [A | B | C | ... | 空闲虚拟地址空间(未映射物理内存)]</span><br><span class="line">                                    ↑ 需要时再映射物理页</span><br><span class="line"></span><br><span class="line">当 batch size 从 N 变为 N+1：</span><br><span class="line">段1: [A&#x27; | B&#x27; | C&#x27; | ... | 新映射的物理页]</span><br><span class="line">     ↑原地扩展，无需新段，无 slivers</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="二、整体架构"><a href="#二、整体架构" class="headerlink" title="二、整体架构"></a>二、整体架构</h2><h3 id="2-1-架构图"><a href="#2-1-架构图" class="headerlink" title="2.1 架构图"></a>2.1 架构图</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line">┌─────────────────────────────────────────────────────────────────────┐</span><br><span class="line">│                        用户层 (PyTorch)                              │</span><br><span class="line">│                     torch.npu.FloatTensor(...)                      │</span><br><span class="line">└──────────────────────────────┬──────────────────────────────────────┘</span><br><span class="line">                               │ alloc/free</span><br><span class="line">                               ▼</span><br><span class="line">┌─────────────────────────────────────────────────────────────────────┐</span><br><span class="line">│                   NPUCachingAllocator (公共接口)                     │</span><br><span class="line">│  ┌─ emptyCache()        → emptyCacheImpl(check_error, true)        │</span><br><span class="line">│  ├─ emptyVirtAddrCache()→ emptyCacheImpl(check_error, false)       │</span><br><span class="line">│  └─ setAllocatorSettings()→ parseArgs(&#123;&quot;expandable_segments&quot;&#125;)    │</span><br><span class="line">└──────────────────────────────┬──────────────────────────────────────┘</span><br><span class="line">                               │</span><br><span class="line">                               ▼</span><br><span class="line">┌─────────────────────────────────────────────────────────────────────┐</span><br><span class="line">│                   DeviceCachingAllocator                            │</span><br><span class="line">│                                                                    │</span><br><span class="line">│  ┌──────────────────┐  ┌──────────────────┐                       │</span><br><span class="line">│  │   small_blocks   │  │   large_blocks   │    BlockPool           │</span><br><span class="line">│  │  (is_small=true) │  │  (is_small=false)│                       │</span><br><span class="line">│  │  ┌────────────┐  │  │  ┌────────────┐  │                       │</span><br><span class="line">│  │  │   blocks   │  │  │  │   blocks   │  │  已映射的空闲块        │</span><br><span class="line">│  │  │ (按大小排序)│  │  │  │ (按大小排序)│  │                       │</span><br><span class="line">│  │  └────────────┘  │  │  └────────────┘  │                       │</span><br><span class="line">│  │  ┌────────────┐  │  │  ┌────────────┐  │                       │</span><br><span class="line">│  │  │  unmapped  │  │  │  │  unmapped  │  │  未映射的虚拟地址块    │</span><br><span class="line">│  │  │ (按地址排序)│  │  │  │ (按地址排序)│  │                       │</span><br><span class="line">│  │  └────────────┘  │  │  └────────────┘  │                       │</span><br><span class="line">│  │  free_physical_  │  │  free_physical_  │  缓存的物理内存句柄    │</span><br><span class="line">│  │  handles_        │  │  handles_        │                       │</span><br><span class="line">│  └──────────────────┘  └──────────────────┘                       │</span><br><span class="line">│                                                                    │</span><br><span class="line">│  expandable_segments_: vector&lt;ExpandableSegment*&gt;                  │</span><br><span class="line">│                                                                    │</span><br><span class="line">│  ┌──────────────────────────────────────────────┐                  │</span><br><span class="line">│  │           ExpandableSegment                   │                  │</span><br><span class="line">│  │                                               │                  │</span><br><span class="line">│  │  ptr_ ──→ [虚拟地址空间，大小 = max_handles_  │                  │</span><br><span class="line">│  │            × segment_size_]                   │                  │</span><br><span class="line">│  │                                               │                  │</span><br><span class="line">│  │  handles_: [nullopt, H1, H2, nullopt, H3, …] │                  │</span><br><span class="line">│  │             未映射  已映射  已映射  未映射  已映射│                  │</span><br><span class="line">│  │                                               │                  │</span><br><span class="line">│  │  segment_size_: 2MB(small) / 20MB(large)     │                  │</span><br><span class="line">│  │  max_handles_:  虚拟地址可容纳的页数           │                  │</span><br><span class="line">│  └──────────────────────────────────────────────┘                  │</span><br><span class="line">└─────────────────────────────────────────────────────────────────────┘</span><br><span class="line">                               │</span><br><span class="line">                               ▼ 底层 NPU API</span><br><span class="line">┌─────────────────────────────────────────────────────────────────────┐</span><br><span class="line">│  AclrtReserveMemAddress  → 预留虚拟地址空间                         │</span><br><span class="line">│  AclrtMallocPhysical     → 分配物理内存页                           │</span><br><span class="line">│  AclrtMapMem             → 将物理页映射到虚拟地址                   │</span><br><span class="line">│  AclrtUnmapMem           → 解除虚拟地址映射                         │</span><br><span class="line">│  AclrtFreePhysical       → 释放物理内存页                           │</span><br><span class="line">│  AclrtReleaseMemAddress  → 释放虚拟地址空间                         │</span><br><span class="line">└─────────────────────────────────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-2-核心设计原则"><a href="#2-2-核心设计原则" class="headerlink" title="2.2 核心设计原则"></a>2.2 核心设计原则</h3><table>
+<thead>
+<tr>
+<th>原则</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>虚拟&#x2F;物理分离</strong></td>
+<td>虚拟地址空间一次性预留（可达 NPU 总内存 1.125 倍），物理内存按需映射</td>
+</tr>
+<tr>
+<td><strong>页粒度管理</strong></td>
+<td>小池 2MB 页、大池 20MB 页，1G 页模式使用 1GB 页</td>
+</tr>
+<tr>
+<td><strong>最低地址优先</strong></td>
+<td>分配时从最低地址搜索，鼓励分割块合并，减少碎片</td>
+</tr>
+<tr>
+<td><strong>物理句柄缓存</strong></td>
+<td>unmap 时缓存物理句柄而非释放，map 时优先复用，减少系统调用开销</td>
+</tr>
+<tr>
+<td><strong>可动态开关</strong></td>
+<td>运行期间可切换 expandable_segments，禁用后不再向可扩展段分配</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="三、配置系统"><a href="#三、配置系统" class="headerlink" title="三、配置系统"></a>三、配置系统</h2><h3 id="3-1-配置入口"><a href="#3-1-配置入口" class="headerlink" title="3.1 配置入口"></a>3.1 配置入口</h3><p>通过环境变量 <code>PYTORCH_NPU_ALLOC_CONF</code> 设置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">export</span> PYTORCH_NPU_ALLOC_CONF=<span class="string">&quot;expandable_segments:True&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="3-2-配置解析流程"><a href="#3-2-配置解析流程" class="headerlink" title="3.2 配置解析流程"></a>3.2 配置解析流程</h3><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUAllocatorConfig.cpp#L115-L137">NPUAllocatorConfig.cpp:115-137</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">parseArgs() → parseExpandableSegments()</span><br><span class="line">                    │</span><br><span class="line">                    ├── 设置 m_expandable_segments = True</span><br><span class="line">                    │</span><br><span class="line">                    ├── 能力检测：AclrtReserveMemAddress(&amp;ptr, 512, ...)</span><br><span class="line">                    │   ├── 成功 → AclrtReleaseMemAddress(ptr)，保留 True</span><br><span class="line">                    │   └── 失败 → 警告并回退为 False</span><br><span class="line">                    │</span><br><span class="line">                    └── 互斥检查（parseArgs 末尾）</span><br><span class="line">                        ├── 与 max_split_size_mb 互斥</span><br><span class="line">                        └── 与 garbage_collection_threshold 互斥</span><br></pre></td></tr></table></figure>
+
+<p><strong>互斥约束</strong>（<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUAllocatorConfig.cpp#L459-L470">NPUAllocatorConfig.cpp:459-470</a>）：</p>
+<ul>
+<li>如果用户显式设置了 <code>expandable_segments:True</code>，同时又设置了 <code>max_split_size_mb</code> 或 <code>garbage_collection_threshold</code>，则直接报错</li>
+<li>如果 <code>expandable_segments</code> 默认为 True（未显式设置），但 <code>max_split_size_mb</code> 或 <code>garbage_collection_threshold</code> 被设置，则自动将 <code>expandable_segments</code> 降级为 False</li>
+</ul>
+<h3 id="3-3-运行时修改"><a href="#3-3-运行时修改" class="headerlink" title="3.3 运行时修改"></a>3.3 运行时修改</h3><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L894-L902">NPUCachingAllocator.cpp:894-902</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">setAllocatorSettings</span><span class="params">(<span class="type">const</span> std::string&amp; settings)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    NPUStatus ret = c10_npu::<span class="built_in">emptyAllNPUStream</span>();</span><br><span class="line">    <span class="built_in">TORCH_CHECK</span>(ret == NPU_STATUS_SUCCESS, ...);</span><br><span class="line">    CachingAllocatorConfig::<span class="built_in">instance</span>().<span class="built_in">parseArgs</span>(settings.<span class="built_in">c_str</span>(), &#123;<span class="string">&quot;expandable_segments&quot;</span>&#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>只允许运行时修改 <code>expandable_segments</code> 这一个配置项。</p>
+<h3 id="3-4-关键常量"><a href="#3-4-关键常量" class="headerlink" title="3.4 关键常量"></a>3.4 关键常量</h3><table>
+<thead>
+<tr>
+<th>常量</th>
+<th>值</th>
+<th>含义</th>
+<th>定义位置</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>kSmallBuffer</code></td>
+<td>2 MB</td>
+<td>小池的页大小</td>
+<td><a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUAllocatorConfig.h#L45">NPUAllocatorConfig.h:45</a></td>
+</tr>
+<tr>
+<td><code>kLargeBuffer</code></td>
+<td>20 MB</td>
+<td>大池的默认页大小</td>
+<td><a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUAllocatorConfig.h#L46">NPUAllocatorConfig.h:46</a></td>
+</tr>
+<tr>
+<td><code>kExtraLargeBuffer</code></td>
+<td>1 GB</td>
+<td>1G 页模式的页大小</td>
+<td><a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L95">NPUCachingAllocator.cpp:95</a></td>
+</tr>
+<tr>
+<td><code>kSmallSize</code></td>
+<td>1 MB</td>
+<td>小&#x2F;大池分界线</td>
+<td><a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L94">NPUCachingAllocator.cpp:94</a></td>
+</tr>
+<tr>
+<td><code>kMinBlockSize</code></td>
+<td>512 B</td>
+<td>最小分配块大小</td>
+<td><a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L93">NPUCachingAllocator.cpp:93</a></td>
+</tr>
+<tr>
+<td><code>kSmallPoolVirAddrSize</code></td>
+<td>2 GB</td>
+<td>HCCL ZeroCopy 时小池虚拟地址上限</td>
+<td><a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L98">NPUCachingAllocator.cpp:98</a></td>
+</tr>
+<tr>
+<td><code>kLargePoolVirAddrSize</code></td>
+<td>10 GB</td>
+<td>HCCL ZeroCopy 时非默认流大池虚拟地址上限</td>
+<td><a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L99">NPUCachingAllocator.cpp:99</a></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="四、核心数据结构"><a href="#四、核心数据结构" class="headerlink" title="四、核心数据结构"></a>四、核心数据结构</h2><h3 id="4-1-ExpandableSegment"><a href="#4-1-ExpandableSegment" class="headerlink" title="4.1 ExpandableSegment"></a>4.1 ExpandableSegment</h3><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L394-L689">NPUCachingAllocator.cpp:394-689</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">ExpandableSegment</span> &#123;</span><br><span class="line">    <span class="type">int</span> device_;                                    <span class="comment">// NPU 设备号</span></span><br><span class="line">    std::optional&lt;aclrtStream&gt; stream_;             <span class="comment">// 关联的 stream</span></span><br><span class="line">    <span class="type">void</span> *ptr_&#123;&#125;;                                   <span class="comment">// 虚拟地址空间起始地址</span></span><br><span class="line">    <span class="type">size_t</span> max_handles_;                            <span class="comment">// 虚拟地址空间可容纳的最大页数</span></span><br><span class="line">    <span class="type">size_t</span> segment_size_;                           <span class="comment">// 每页大小 (2MB/20MB/1GB)</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">Handle</span> &#123;</span><br><span class="line">        aclrtDrvMemHandle handle;                   <span class="comment">// 物理内存句柄</span></span><br><span class="line">        std::optional&lt;<span class="type">uint64_t</span>&gt; shareableHandle;    <span class="comment">// IPC 共享句柄</span></span><br><span class="line">    &#125;;</span><br><span class="line">    std::vector&lt;std::optional&lt;Handle&gt;&gt; handles_;    <span class="comment">// 页表：每页对应一个物理句柄</span></span><br><span class="line">    std::shared_ptr&lt;c10d_npu::HCCLComm&gt; hcclComm_;  <span class="comment">// HCCL 通信句柄</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p><strong>内存布局示意</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">虚拟地址空间:  [page0] [page1] [page2] [page3] [page4] ... [pageN]</span><br><span class="line">               ←─────────────── max_handles_ × segment_size_ ──────────→</span><br><span class="line"></span><br><span class="line">handles_:      [H1]    [nullopt] [H2]   [H3]    [nullopt] ...</span><br><span class="line">               已映射    未映射    已映射   已映射    未映射</span><br><span class="line"></span><br><span class="line">物理内存:      [2MB]              [2MB]   [2MB]</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-2-Block（扩展字段）"><a href="#4-2-Block（扩展字段）" class="headerlink" title="4.2 Block（扩展字段）"></a>4.2 Block（扩展字段）</h3><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L231-L309">NPUCachingAllocator.cpp:231-309</a></p>
+<p>与 expandable_segments 相关的两个关键字段：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">Block</span> &#123;</span><br><span class="line">    <span class="type">bool</span> mapped&#123; <span class="literal">true</span> &#125;;                          <span class="comment">// 虚拟地址是否由物理页支撑</span></span><br><span class="line">    ExpandableSegment *expandable_segment_&#123; <span class="literal">nullptr</span> &#125;;  <span class="comment">// 所属的可扩展段</span></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>mapped = true</code>：块有物理内存支撑，可正常使用</li>
+<li><code>mapped = false</code>：块仅占虚拟地址空间，无物理内存，存在于 <code>pool-&gt;unmapped</code> 集合中</li>
+<li><code>expandable_segment_ = nullptr</code>：传统模式分配的块，<code>mapped</code> 始终为 true</li>
+</ul>
+<h3 id="4-3-BlockPool（扩展字段）"><a href="#4-3-BlockPool（扩展字段）" class="headerlink" title="4.3 BlockPool（扩展字段）"></a>4.3 BlockPool（扩展字段）</h3><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L213-L227">NPUCachingAllocator.cpp:213-227</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">BlockPool</span> &#123;</span><br><span class="line">    std::set&lt;Block *, Comparison&gt; blocks;          <span class="comment">// 已映射的空闲块（按大小排序）</span></span><br><span class="line">    std::set&lt;Block *, Comparison&gt; unmapped;        <span class="comment">// 未映射的虚拟地址块（按地址排序）</span></span><br><span class="line">    std::vector&lt;aclrtDrvMemHandle&gt; free_physical_handles_;  <span class="comment">// 缓存的已释放物理内存句柄</span></span><br><span class="line">    <span class="type">const</span> <span class="type">bool</span> is_small;</span><br><span class="line">    PrivatePool *owner_PrivatePool;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>blocks</code>：存放 <code>mapped=true</code> 的空闲块，按大小排序，用于 best-fit 分配</li>
+<li><code>unmapped</code>：存放 <code>mapped=false</code> 的虚拟地址块，按地址排序，用于最低地址优先分配</li>
+<li><code>free_physical_handles_</code>：unmap 时缓存的物理句柄，map 时优先复用</li>
+</ul>
+<h3 id="4-4-SegmentRange"><a href="#4-4-SegmentRange" class="headerlink" title="4.4 SegmentRange"></a>4.4 SegmentRange</h3><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L311-L315">NPUCachingAllocator.cpp:311-315</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">SegmentRange</span> &#123;</span><br><span class="line">    <span class="type">char</span> *ptr;</span><br><span class="line">    <span class="type">size_t</span> size;</span><br><span class="line">    <span class="built_in">SegmentRange</span>(<span class="type">void</span> *p, <span class="type">size_t</span> s) : <span class="built_in">ptr</span>(<span class="built_in">static_cast</span>&lt;<span class="type">char</span> *&gt;(p)), <span class="built_in">size</span>(s) &#123;&#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>用于描述虚拟地址空间中的一段连续区域，是 map&#x2F;unmap 操作的输入输出参数。</p>
+<hr>
+<h2 id="五、核心流程代码走读"><a href="#五、核心流程代码走读" class="headerlink" title="五、核心流程代码走读"></a>五、核心流程代码走读</h2><h3 id="5-1-内存分配流程"><a href="#5-1-内存分配流程" class="headerlink" title="5.1 内存分配流程"></a>5.1 内存分配流程</h3><h4 id="5-1-1-总入口：alloc-block"><a href="#5-1-1-总入口：alloc-block" class="headerlink" title="5.1.1 总入口：alloc_block"></a>5.1.1 总入口：alloc_block</h4><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L2668-L2736">NPUCachingAllocator.cpp:2668-2736</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">alloc_block(p, isRetry, ctx, lock)</span><br><span class="line">    │</span><br><span class="line">    ├── expandable_segments() == True ?</span><br><span class="line">    │   ├── YES → try_allocate_expandable_block(...)</span><br><span class="line">    │   └── NO  → AclrtMallocAlign32(...)  [传统模式]</span><br><span class="line">    │</span><br><span class="line">    └── 返回分配结果</span><br></pre></td></tr></table></figure>
+
+<p>关键分支（<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L2683-L2694">L2683-2694</a>）：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (CachingAllocatorConfig::<span class="built_in">expandable_segments</span>()) &#123;</span><br><span class="line">    p.block = <span class="built_in">try_allocate_expandable_block</span>(p.<span class="built_in">device</span>(), p.<span class="built_in">stream</span>(), p.pool, p.<span class="built_in">size</span>(), ctx);</span><br><span class="line">    <span class="keyword">if</span> (p.block) &#123;</span><br><span class="line">        p.err = ACL_ERROR_NONE;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        p.err = ACL_ERROR_RT_MEMORY_ALLOCATION;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">bool</span>(p.block);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="5-1-2-查找可扩展块：find-expandable-block"><a href="#5-1-2-查找可扩展块：find-expandable-block" class="headerlink" title="5.1.2 查找可扩展块：find_expandable_block"></a>5.1.2 查找可扩展块：find_expandable_block</h4><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L2227-L2283">NPUCachingAllocator.cpp:2227-2283</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">find_expandable_block(device, stream, pool, size)</span><br><span class="line">    │</span><br><span class="line">    ├── 1. 在 pool-&gt;unmapped 中按地址从低到高搜索</span><br><span class="line">    │   │   对每个 unmapped 块：</span><br><span class="line">    │   │   ├── 检查前一个块是否也可用（空闲且已映射）</span><br><span class="line">    │   │   ├── 从该位置向后遍历，累计可用地址空间</span><br><span class="line">    │   │   └── 如果累计空间 &gt;= size，返回该候选块</span><br><span class="line">    │   │</span><br><span class="line">    │   └── lambda: has_available_address_space</span><br><span class="line">    │       沿 next 指针遍历，累计连续可分配（空闲+无事件+无流使用）块的大小</span><br><span class="line">    │</span><br><span class="line">    ├── 2. 如果没有找到合适的空间</span><br><span class="line">    │   │   创建新的 ExpandableSegment</span><br><span class="line">    │   │   ├── 页大小: 小池 2MB, 大池 20MB (可配置), 1G模式 1GB</span><br><span class="line">    │   │   ├── AclrtReserveMemAddress 预留虚拟地址空间</span><br><span class="line">    │   │   └── 创建 Block(mapped=false) 插入 pool-&gt;unmapped</span><br><span class="line">    │   │</span><br><span class="line">    │   └── 返回新创建的候选块</span><br><span class="line">    │</span><br><span class="line">    └── 返回候选块</span><br></pre></td></tr></table></figure>
+
+<p>核心搜索逻辑：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">auto</span> allocatable = [](Block *b) &#123;</span><br><span class="line">    <span class="keyword">return</span> b &amp;&amp; !b-&gt;allocated &amp;&amp; b-&gt;event_count == <span class="number">0</span> &amp;&amp; b-&gt;stream_uses.<span class="built_in">empty</span>();</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">auto</span> has_available_address_space = [&amp;](Block *b) &#123;</span><br><span class="line">    <span class="type">size_t</span> bytes = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">while</span> (bytes &lt; size &amp;&amp; <span class="built_in">allocatable</span>(b)) &#123;</span><br><span class="line">        bytes += b-&gt;size;</span><br><span class="line">        b = b-&gt;next;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> bytes &gt;= size;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">auto</span> it = pool-&gt;unmapped.<span class="built_in">lower_bound</span>(&amp;key);</span><br><span class="line">     it != pool-&gt;unmapped.<span class="built_in">end</span>() &amp;&amp; (*it)-&gt;stream == stream; ++it) &#123;</span><br><span class="line">    Block *c = *it;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">allocatable</span>(c-&gt;prev)) &#123;</span><br><span class="line">        c = c-&gt;prev;  <span class="comment">// 尝试从前一个已映射空闲块开始</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">has_available_address_space</span>(c)) &#123;</span><br><span class="line">        <span class="keyword">return</span> c;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="5-1-3-映射物理内存：map-block"><a href="#5-1-3-映射物理内存：map-block" class="headerlink" title="5.1.3 映射物理内存：map_block"></a>5.1.3 映射物理内存：map_block</h4><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L2285-L2331">NPUCachingAllocator.cpp:2285-2331</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">map_block(to_map, size, ctx, map_pool)</span><br><span class="line">    │</span><br><span class="line">    ├── 1. 调用 ExpandableSegment::map() 映射物理内存</span><br><span class="line">    │   └── 如果返回 size==0，表示 OOM，返回 false</span><br><span class="line">    │</span><br><span class="line">    ├── 2. 从 pool-&gt;unmapped 中移除 to_map</span><br><span class="line">    │   设置 to_map-&gt;mapped = true</span><br><span class="line">    │</span><br><span class="line">    ├── 3. 如果映射范围 &lt; to_map-&gt;size（映射了部分页）</span><br><span class="line">    │   ├── 创建 remaining Block（未映射部分）</span><br><span class="line">    │   ├── remaining-&gt;mapped = false</span><br><span class="line">    │   ├── remaining-&gt;expandable_segment_ = to_map-&gt;expandable_segment_</span><br><span class="line">    │   ├── 插入链表：to_map → remaining → to_map-&gt;next</span><br><span class="line">    │   └── pool-&gt;unmapped.insert(remaining)</span><br><span class="line">    │</span><br><span class="line">    ├── 4. try_merge_blocks(to_map, to_map-&gt;prev, pool)</span><br><span class="line">    │   try_merge_blocks(to_map, to_map-&gt;next, pool)</span><br><span class="line">    │   └── 合并相邻的同状态（mapped/unmapped）块</span><br><span class="line">    │</span><br><span class="line">    ├── 5. pool-&gt;blocks.insert(to_map)</span><br><span class="line">    │</span><br><span class="line">    └── 6. 更新统计信息，记录 TraceEntry::SEGMENT_MAP</span><br></pre></td></tr></table></figure>
+
+<h4 id="5-1-4-ExpandableSegment-map（底层映射）"><a href="#5-1-4-ExpandableSegment-map（底层映射）" class="headerlink" title="5.1.4 ExpandableSegment::map（底层映射）"></a>5.1.4 ExpandableSegment::map（底层映射）</h4><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L435-L484">NPUCachingAllocator.cpp:435-484</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">ExpandableSegment::map(range, pool)</span><br><span class="line">    │</span><br><span class="line">    ├── 1. 计算需要映射的页范围 [begin, end)</span><br><span class="line">    │   begin = segmentLeft(range.ptr)   → 向下取整到页边界</span><br><span class="line">    │   end   = segmentRight(range.ptr + range.size) → 向上取整到页边界</span><br><span class="line">    │</span><br><span class="line">    ├── 2. 扩展 handles_ 向量（如果需要）</span><br><span class="line">    │</span><br><span class="line">    ├── 3. 为每个页分配物理内存</span><br><span class="line">    │   for i in [begin, end):</span><br><span class="line">    │   ├── 优先从 pool-&gt;free_physical_handles_ 复用</span><br><span class="line">    │   │   └── 取出最后一个缓存句柄，跳过 AclrtMallocPhysical</span><br><span class="line">    │   │</span><br><span class="line">    │   └── 否则调用 AclrtMallocPhysical 分配新物理页</span><br><span class="line">    │       └── OOM 时回滚：释放已分配的所有 handle，返回 size=0</span><br><span class="line">    │</span><br><span class="line">    ├── 4. 将物理内存映射到虚拟地址</span><br><span class="line">    │   for i in [begin, end):</span><br><span class="line">    │       AclrtMapMem(ptr_ + i*segment_size_, segment_size_, handles_[i].handle)</span><br><span class="line">    │</span><br><span class="line">    └── 5. 返回实际映射的范围 rangeFromHandles(begin, end)</span><br></pre></td></tr></table></figure>
+
+<p><strong>关键设计</strong>：物理内存分配和映射分两步完成。先分配所有页的物理内存，再统一映射。如果中途 OOM，可以干净地回滚。</p>
+<h4 id="5-1-5-组合分配：try-allocate-expandable-block"><a href="#5-1-5-组合分配：try-allocate-expandable-block" class="headerlink" title="5.1.5 组合分配：try_allocate_expandable_block"></a>5.1.5 组合分配：try_allocate_expandable_block</h4><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L2333-L2363">NPUCachingAllocator.cpp:2333-2363</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">try_allocate_expandable_block(device, stream, pool, size, ctx)</span><br><span class="line">    │</span><br><span class="line">    ├── 1. find_expandable_block() → candidate</span><br><span class="line">    │</span><br><span class="line">    ├── 2. 如果 candidate 未映射，先 map_block(candidate, min(candidate.size, size))</span><br><span class="line">    │</span><br><span class="line">    ├── 3. while candidate-&gt;size &lt; size:</span><br><span class="line">    │   │   需要更多空间，继续映射 candidate-&gt;next</span><br><span class="line">    │   │   ├── remaining = size - candidate-&gt;size</span><br><span class="line">    │   │   ├── new_candidate = candidate-&gt;next</span><br><span class="line">    │   │   └── map_block(new_candidate, min(remaining, new_candidate-&gt;size))</span><br><span class="line">    │   │       → map_block 内部会 try_merge_blocks，合并 candidate 和 new_candidate</span><br><span class="line">    │   └── candidate = new_candidate</span><br><span class="line">    │</span><br><span class="line">    └── 4. pool-&gt;blocks.erase(candidate)，返回 candidate</span><br></pre></td></tr></table></figure>
+
+<p><strong>典型场景</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">初始状态：</span><br><span class="line">  [mapped_free 10MB] → [unmapped 50MB] → null</span><br><span class="line"></span><br><span class="line">请求 30MB：</span><br><span class="line">  1. candidate = mapped_free (10MB)</span><br><span class="line">  2. candidate-&gt;size(10MB) &lt; 30MB，进入循环</span><br><span class="line">  3. map_block(unmapped, 20MB)</span><br><span class="line">     → 映射 20MB 物理内存</span><br><span class="line">     → 剩余 30MB 仍为 unmapped</span><br><span class="line">     → try_merge_blocks 合并 mapped_free 和新映射的 20MB</span><br><span class="line">  4. 现在 candidate-&gt;size = 30MB &gt;= 30MB，退出循环</span><br><span class="line">  5. 从 blocks 中移除，返回给调用者</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-2-内存释放流程"><a href="#5-2-内存释放流程" class="headerlink" title="5.2 内存释放流程"></a>5.2 内存释放流程</h3><h4 id="5-2-1-free-block-中的特殊处理"><a href="#5-2-1-free-block-中的特殊处理" class="headerlink" title="5.2.1 free_block 中的特殊处理"></a>5.2.1 free_block 中的特殊处理</h4><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L2361-L2422">NPUCachingAllocator.cpp:2361-2422</a></p>
+<p>free_block 本身不直接 unmap 物理内存，而是将块放回 <code>pool-&gt;blocks</code> 空闲池。关键区别：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 可扩展段的空闲页不计入 inactive_split 统计</span></span><br><span class="line"><span class="keyword">if</span> (!block-&gt;expandable_segment_) &#123;</span><br><span class="line">    <span class="built_in">update_stat</span>(stats.inactive_split[stat_type], net_change_inactive_split_blocks);</span><br><span class="line">    <span class="built_in">update_stat</span>(stats.inactive_split_bytes[stat_type], net_change_inactive_split_size);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>原因</strong>：可扩展段的空闲页总是可以通过 unmap 归还给系统的，不属于”无法释放的死碎片”。</p>
+<h4 id="5-2-2-unmap-block：解除物理内存映射"><a href="#5-2-2-unmap-block：解除物理内存映射" class="headerlink" title="5.2.2 unmap_block：解除物理内存映射"></a>5.2.2 unmap_block：解除物理内存映射</h4><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L2874-L2930">NPUCachingAllocator.cpp:2874-2930</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">unmap_block(block, context, free_physical)</span><br><span class="line">    │</span><br><span class="line">    ├── 1. ExpandableSegment::unmap(range, pool)</span><br><span class="line">    │   │   计算完全空闲的页范围 [begin, end)</span><br><span class="line">    │   │   调用 unmapHandles(begin, end, pool)</span><br><span class="line">    │   │</span><br><span class="line">    │   └── unmapHandles:</span><br><span class="line">    │       ├── npuSynchronizeDevice()  ← 确保所有 NPU 操作完成</span><br><span class="line">    │       ├── for each page:</span><br><span class="line">    │       │   ├── AclrtUnmapMem()     ← 解除虚拟地址映射</span><br><span class="line">    │       │   └── if pool:</span><br><span class="line">    │       │       pool-&gt;free_physical_handles_.push_back(handle)  ← 缓存句柄</span><br><span class="line">    │       │     else:</span><br><span class="line">    │       │       AclrtFreePhysical(handle)  ← 直接释放物理内存</span><br><span class="line">    │       └── trimHandles()  ← 清理 handles_ 尾部的 nullopt</span><br><span class="line">    │</span><br><span class="line">    ├── 2. 从 pool-&gt;blocks 中移除 block</span><br><span class="line">    │</span><br><span class="line">    ├── 3. 处理 unmap 范围前后的剩余已映射部分</span><br><span class="line">    │   ├── before_size &gt; 0 → 创建 before_free (mapped=true)</span><br><span class="line">    │   └── after_size  &gt; 0 → 创建 after_free  (mapped=true)</span><br><span class="line">    │</span><br><span class="line">    ├── 4. 更新 block 为 unmapped 状态</span><br><span class="line">    │   block-&gt;mapped = false</span><br><span class="line">    │</span><br><span class="line">    ├── 5. try_merge_blocks(block, block-&gt;prev)  ← 合并相邻 unmapped 块</span><br><span class="line">    │   try_merge_blocks(block, block-&gt;next)</span><br><span class="line">    │</span><br><span class="line">    ├── 6. pool-&gt;unmapped.insert(block)</span><br><span class="line">    │</span><br><span class="line">    └── 7. 更新统计信息，记录 TraceEntry::SEGMENT_UNMAP</span><br></pre></td></tr></table></figure>
+
+<p><strong>unmap 的对齐约束</strong>（<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L489-L497">NPUCachingAllocator.cpp:489-497</a>）：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">SegmentRange <span class="title">unmap</span><span class="params">(SegmentRange range, BlockPool *pool)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">auto</span> begin = <span class="built_in">segmentRight</span>(range.ptr);       <span class="comment">// 向上取整到页边界</span></span><br><span class="line">    <span class="keyword">auto</span> end = <span class="built_in">segmentLeft</span>(range.ptr + range.size);  <span class="comment">// 向下取整到页边界</span></span><br><span class="line">    <span class="keyword">if</span> (begin &gt;= end) &#123;</span><br><span class="line">        <span class="keyword">return</span> SegmentRange&#123; range.ptr, <span class="number">0</span> &#125;;    <span class="comment">// 没有完整空闲页可 unmap</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">unmapHandles</span>(begin, end, pool);</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">rangeFromHandles</span>(begin, end);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>只有完全空闲的页（不与活跃分配共享页边界）才能被 unmap。</p>
+<h4 id="5-2-3-release-expandable-segment：释放整个可扩展段"><a href="#5-2-3-release-expandable-segment：释放整个可扩展段" class="headerlink" title="5.2.3 release_expandable_segment：释放整个可扩展段"></a>5.2.3 release_expandable_segment：释放整个可扩展段</h4><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L2817-L2831">NPUCachingAllocator.cpp:2817-2831</a></p>
+<p>当整个 ExpandableSegment 的所有页都变为 unmapped 且无前后邻居时，可以释放整个段：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">release_expandable_segment</span><span class="params">(Block *block)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">TORCH_INTERNAL_ASSERT</span>(block-&gt;size == block-&gt;expandable_segment_-&gt;<span class="built_in">size</span>());</span><br><span class="line">    <span class="built_in">TORCH_INTERNAL_ASSERT</span>(!block-&gt;mapped);</span><br><span class="line">    expandable_segments_.<span class="built_in">erase</span>(it);</span><br><span class="line">    block-&gt;pool-&gt;unmapped.<span class="built_in">erase</span>(block);</span><br><span class="line">    <span class="keyword">delete</span> block-&gt;expandable_segment_;  <span class="comment">// 析构时 unmap 所有剩余映射 + AclrtReleaseMemAddress</span></span><br><span class="line">    <span class="keyword">delete</span> block;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="5-2-4-release-blocks：批量释放"><a href="#5-2-4-release-blocks：批量释放" class="headerlink" title="5.2.4 release_blocks：批量释放"></a>5.2.4 release_blocks：批量释放</h4><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L2932-L2963">NPUCachingAllocator.cpp:2932-2963</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">release_blocks(pool, context, free_physical)</span><br><span class="line">    │</span><br><span class="line">    ├── 1. 遍历 pool-&gt;blocks，收集可扩展段块到 to_unmap</span><br><span class="line">    │   非可扩展的完整空闲块直接 release_block</span><br><span class="line">    │</span><br><span class="line">    ├── 2. 对每个可扩展段块调用 unmap_block(block, context, free_physical)</span><br><span class="line">    │   如果 unmap 后块无邻居，调用 release_expandable_segment</span><br><span class="line">    │</span><br><span class="line">    └── 3. 如果 free_physical=true，释放所有缓存的物理句柄</span><br><span class="line">        while (!pool.free_physical_handles_.empty()):</span><br><span class="line">            AclrtFreePhysical(handle)</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-3-OOM-处理流程"><a href="#5-3-OOM-处理流程" class="headerlink" title="5.3 OOM 处理流程"></a>5.3 OOM 处理流程</h3><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L1250-L1264">NPUCachingAllocator.cpp:1250-1264</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">alloc_block 失败（OOM）</span><br><span class="line">    │</span><br><span class="line">    ├── npuSynchronizeDevice(true)  ← 确保所有异步操作完成</span><br><span class="line">    │</span><br><span class="line">    ├── release_cached_blocks(true, context, true)</span><br><span class="line">    │   │   free_physical = true 意味着：</span><br><span class="line">    │   │   ├── unmap 时直接 AclrtFreePhysical（不缓存句柄）</span><br><span class="line">    │   │   └── 释放 pool 中所有 free_physical_handles_</span><br><span class="line">    │   │</span><br><span class="line">    │   └── 这会释放所有可扩展段中的空闲物理页</span><br><span class="line">    │</span><br><span class="line">    └── 重试 alloc_block</span><br></pre></td></tr></table></figure>
+
+<p><strong>关键</strong>：OOM 时 <code>free_physical=true</code>，物理内存被真正释放回系统，而非缓存。这是可扩展段相比传统模式的优势——传统模式只能释放完整的空闲段，而可扩展模式可以按页释放。</p>
+<h3 id="5-4-Cache-清理流程"><a href="#5-4-Cache-清理流程" class="headerlink" title="5.4 Cache 清理流程"></a>5.4 Cache 清理流程</h3><h4 id="emptyCache（完全清理）"><a href="#emptyCache（完全清理）" class="headerlink" title="emptyCache（完全清理）"></a>emptyCache（完全清理）</h4><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L3360-L3363">NPUCachingAllocator.cpp:3360-3363</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">emptyCache</span><span class="params">(<span class="type">bool</span> check_error)</span> <span class="keyword">override</span> </span>&#123;</span><br><span class="line">    <span class="built_in">emptyCacheImpl</span>(check_error, <span class="literal">true</span>);  <span class="comment">// free_physical = true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>→ 调用 <code>release_cached_blocks</code>，<code>free_physical=true</code>，所有空闲物理页被释放。</p>
+<h4 id="emptyVirtAddrCache（仅清理虚拟地址缓存）"><a href="#emptyVirtAddrCache（仅清理虚拟地址缓存）" class="headerlink" title="emptyVirtAddrCache（仅清理虚拟地址缓存）"></a>emptyVirtAddrCache（仅清理虚拟地址缓存）</h4><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L3365-L3371">NPUCachingAllocator.cpp:3365-3371</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">emptyVirtAddrCache</span><span class="params">(<span class="type">bool</span> check_error)</span> <span class="keyword">override</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!CachingAllocatorConfig::<span class="built_in">expandable_segments</span>()) &#123;</span><br><span class="line">        <span class="built_in">AT_ERROR</span>(<span class="string">&quot;Unsupported config for empty_virt_addr_cache, please enable expandable_segments.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">emptyCacheImpl</span>(check_error, <span class="literal">false</span>);  <span class="comment">// free_physical = false</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>→ 调用 <code>release_cached_blocks</code>，<code>free_physical=false</code>，物理句柄被缓存而非释放。虚拟地址空间被释放（unmap），但物理内存保留在 <code>free_physical_handles_</code> 中供后续快速复用。</p>
+<hr>
+<h2 id="六、关键策略详解"><a href="#六、关键策略详解" class="headerlink" title="六、关键策略详解"></a>六、关键策略详解</h2><h3 id="6-1-最低地址优先分配"><a href="#6-1-最低地址优先分配" class="headerlink" title="6.1 最低地址优先分配"></a>6.1 最低地址优先分配</h3><p>在 <code>find_expandable_block</code> 中，<code>pool-&gt;unmapped</code> 按<strong>地址排序</strong>，搜索从 <code>lower_bound</code> 开始，即从最低地址开始查找。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">auto</span> it = pool-&gt;unmapped.<span class="built_in">lower_bound</span>(&amp;key);</span><br><span class="line">     it != pool-&gt;unmapped.<span class="built_in">end</span>() &amp;&amp; (*it)-&gt;stream == stream; ++it) &#123;</span><br></pre></td></tr></table></figure>
+
+<p><strong>效果</strong>：当 OOM 导致中间出现 unmapped 空洞后，新分配会优先填充这些空洞，使分割的块重新合并。</p>
+<h3 id="6-2-Best-Fit-搜索中的可扩展大小"><a href="#6-2-Best-Fit-搜索中的可扩展大小" class="headerlink" title="6.2 Best-Fit 搜索中的可扩展大小"></a>6.2 Best-Fit 搜索中的可扩展大小</h3><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L2539-L2554">NPUCachingAllocator.cpp:2539-2554</a></p>
+<p>在 <code>get_free_block</code> 中搜索最佳匹配时，可扩展块的实际可用大小需要考虑其后方的未映射空间：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">auto</span> expandable_size = [](Block *b) &#123;</span><br><span class="line">    <span class="keyword">return</span> b-&gt;size + (b-&gt;next &amp;&amp; !b-&gt;next-&gt;mapped ? b-&gt;next-&gt;size : <span class="number">0</span>);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>这使得分配器在选择块时，会考虑块的可扩展潜力，而不仅仅是当前已映射的大小。</p>
+<h3 id="6-3-should-split-策略差异"><a href="#6-3-should-split-策略差异" class="headerlink" title="6.3 should_split 策略差异"></a>6.3 should_split 策略差异</h3><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L2489-L2497">NPUCachingAllocator.cpp:2489-2497</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">bool</span> <span class="title">should_split</span><span class="params">(<span class="type">const</span> Block *block, <span class="type">size_t</span> size)</span> </span>&#123;</span><br><span class="line">    <span class="type">size_t</span> remaining = block-&gt;size - size;</span><br><span class="line">    <span class="keyword">if</span> (block-&gt;pool-&gt;is_small || CachingAllocatorConfig::<span class="built_in">expandable_segments</span>()) &#123;</span><br><span class="line">        <span class="keyword">return</span> remaining &gt;= kMinBlockSize;  <span class="comment">// 512B</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">return</span> (size &lt; <span class="built_in">max_split_size</span>()) &amp;&amp; (remaining &gt; kSmallSize);  <span class="comment">// 1MB</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可扩展模式下分割更积极（阈值 512B vs 1MB），因为：</p>
+<ul>
+<li>分割出的小块仍在同一个虚拟地址段内</li>
+<li>空闲页可以随时 unmap 回收</li>
+<li>不会产生传统意义上的”死碎片”</li>
+</ul>
+<h3 id="6-4-物理句柄缓存机制"><a href="#6-4-物理句柄缓存机制" class="headerlink" title="6.4 物理句柄缓存机制"></a>6.4 物理句柄缓存机制</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">map 时：</span><br><span class="line">  ┌─────────────────────────────────┐</span><br><span class="line">  │ free_physical_handles_ 非空？   │</span><br><span class="line">  │   ├── YES → 取出最后一个句柄复用 │  ← 无需 AclrtMallocPhysical</span><br><span class="line">  │   └── NO  → AclrtMallocPhysical │  ← 分配新物理页</span><br><span class="line">  └─────────────────────────────────┘</span><br><span class="line"></span><br><span class="line">unmap 时：</span><br><span class="line">  ┌─────────────────────────────────────┐</span><br><span class="line">  │ free_physical 参数？                 │</span><br><span class="line">  │   ├── true  → AclrtFreePhysical     │  ← 真正释放物理内存</span><br><span class="line">  │   └── false → push_back 到缓存      │  ← 保留供后续复用</span><br><span class="line">  └─────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>free_physical</th>
+<th>效果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>OOM 重试</td>
+<td>true</td>
+<td>物理内存真正释放回系统</td>
+</tr>
+<tr>
+<td>emptyCache</td>
+<td>true</td>
+<td>完全清理，释放所有物理内存</td>
+</tr>
+<tr>
+<td>emptyVirtAddrCache</td>
+<td>false</td>
+<td>仅释放虚拟地址映射，物理句柄缓存</td>
+</tr>
+<tr>
+<td>日常 unmap_block</td>
+<td>false</td>
+<td>缓存句柄，加速后续 map</td>
+</tr>
+</tbody></table>
+<h3 id="6-5-try-merge-blocks-的映射状态约束"><a href="#6-5-try-merge-blocks-的映射状态约束" class="headerlink" title="6.5 try_merge_blocks 的映射状态约束"></a>6.5 try_merge_blocks 的映射状态约束</h3><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L2424-L2430">NPUCachingAllocator.cpp:2424-2430</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">size_t</span> <span class="title">try_merge_bcks</span><span class="params">(Block *dst, Block *src, BlockPool &amp;pool)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!src || src-&gt;allocated || src-&gt;event_count &gt; <span class="number">0</span> ||</span><br><span class="line">        !src-&gt;stream_uses.<span class="built_in">empty</span>() || dst-&gt;mapped != src-&gt;mapped) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;  <span class="comment">// 映射状态不同则无法合并</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>只有 <code>mapped</code> 状态相同的相邻块才能合并。这确保了：</p>
+<ul>
+<li>已映射的空闲块之间可以合并</li>
+<li>未映射的虚拟地址块之间可以合并</li>
+<li>已映射和未映射的块不会错误合并</li>
+</ul>
+<hr>
+<h2 id="七、ExpandableSegment-构造与析构"><a href="#七、ExpandableSegment-构造与析构" class="headerlink" title="七、ExpandableSegment 构造与析构"></a>七、ExpandableSegment 构造与析构</h2><h1 id="7-1-构造：虚拟地址空间预留"><a href="#7-1-构造：虚拟地址空间预留" class="headerlink" title="7.1 构造：虚拟地址空间预留"></a>7.1 构造：虚拟地址空间预留</h1><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L394-L431">NPUCachingAllocator.cpp:394-431</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">ExpandableSegment</span>(<span class="type">int</span> device, std::optional&lt;aclrtStream&gt; stream, <span class="type">size_t</span> size, <span class="type">size_t</span> handleNum = <span class="number">0</span>)</span><br><span class="line">    : <span class="built_in">max_handles_</span>(handleNum * <span class="number">2</span>), <span class="built_in">segment_size_</span>(size)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (max_handles_ == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// 默认：预留 NPU 总内存 1.125 倍的虚拟地址空间</span></span><br><span class="line">        <span class="built_in">aclrtGetMemInfo</span>(ACL_HBM_MEM, &amp;device_free, &amp;device_total);</span><br><span class="line">        max_handles_ = <span class="built_in">numSegments</span>(device_total + device_total / <span class="number">8</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">IsHcclZeroCopyEnable</span>()) &#123;</span><br><span class="line">            <span class="comment">// HCCL ZeroCopy 模式下限制虚拟地址空间</span></span><br><span class="line">            <span class="keyword">if</span> (kSmallBuffer == segment_size_) &#123;</span><br><span class="line">                max_handles_ = <span class="built_in">numSegments</span>(kSmallPoolVirAddrSize);   <span class="comment">// 2GB</span></span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (default_stream != *stream) &#123;</span><br><span class="line">                max_handles_ = <span class="built_in">numSegments</span>(kLargePoolVirAddrSize);   <span class="comment">// 10GB</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 预留虚拟地址空间（不占物理内存）</span></span><br><span class="line">    <span class="built_in">AserveMemAddress</span>(&amp;ptr_, segment_size_ * max_handles_, <span class="number">0</span>, <span class="literal">nullptr</span>, <span class="number">1</span>, <span class="built_in">getHcclComm</span>());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>虚拟地址空间大小计算</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>池类型</th>
+<th>页大小</th>
+<th>默认虚拟地址空间</th>
+<th>HCCL ZeroCopy</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>小池</td>
+<td>2 MB</td>
+<td>device_total × 1.125</td>
+<td>2 GB</td>
+</tr>
+<tr>
+<td>大池（默认流）</td>
+<td>20 MB</td>
+<td>device_total × 1.125</td>
+<td>device_total × 1.125</td>
+</tr>
+<tr>
+<td>大池（非默认流）</td>
+<td>20 MB</td>
+<td>device_total × 1.125</td>
+<td>10 GB</td>
+</tr>
+<tr>
+<td>1G 页模式</td>
+<td>1 GB</td>
+<td>device_total × 1.125</td>
+<td>同上</td>
+</tr>
+</tbody></table>
+<p>#7.2 析构：资源释放</p>
+<p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L574-L579">NPUCachingAllocator.cpp:574-579</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">~<span class="built_in">ExpandableSegment</span>() &#123;</span><br><span class="line">    forEachAllocatedRange([&amp;](<span class="type">size_t</span> begin, <span class="type">size_t</span> end) &#123;</span><br><span class="line">        <span class="built_in">unmapHandles</span>(begin, end);  <span class="comment">// unmap + AclrtFreePhysical（无 pool，直接释放）</span></span><br><span class="line">    &#125;);</span><br><span class="line">    <span class="built_in">AclrtReleaseMemAddress</span>(ptr_, <span class="built_in">getHcclComm</span>());  <span class="comment">// 释放虚拟地址空间</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>forEachAllocatedRange</code> 遍历 <code>handles_</code> 找出所有连续的非 nullopt void forEachAllocatedRange(std::function&lt;void(size_t, size_t)&gt; fn) {<br>    size_t start &#x3D; 0;<br>    for (auto i : c10::irange(handles_.size())) {<br>        if (handles_.at(i) &amp;&amp; (i &#x3D;&#x3D; 0 || !handles_.at(i - 1))) {<br>            start &#x3D; i;  &#x2F;&#x2F; 连续已映射区间的起点<br>        }<br>        if (handles_.at(i) &amp;&amp; (i + 1 &#x3D;&#x3D; handles_.size() || !handles_.at(i + 1))) {<br>            fn(start, i + 1);  &#x2F;&#x2F; 连续已映射区间的终点<br>        }<br>    }<br>}</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">---</span><br><span class="line"></span><br><span class="line">## 八、辅助工具函数</span><br><span class="line"></span><br><span class="line">代码位置：[NPUCachingAllocat.cpp:644-664](file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L644-L664)</span><br><span class="line"></span><br><span class="line">```cpp</span><br><span class="line">// 计算包含 size 字节需要的页数（向上取整）</span><br><span class="line">size_t numSegments(size_t size) &#123; return (size + segment_size_ - 1) / segment_size_; &#125;</span><br><span class="line"></span><br><span class="line">// 给定地址 p，计算其所在页的索引（向下取整）</span><br><span class="line">size_t segmentLeft(char *p) &#123; return static_cast&lt;size_t&gt;(p - ptr()) / segment_size_; &#125;</span><br><span class="line"></span><br><span class="line">// 给定地址 p，计算其后的页索引（向上取整）</span><br><span class="line">size_t segmentRight(char *p) &#123; return numSegments(p - ptr()); &#125;</span><br><span class="line"></span><br><span class="line">// 根据页索引范围构造 SegmentRange</span><br><span class="line">SegmentRange rangeFromHandles(size_t begin, size_t end) &#123;</span><br><span class="line">    return SegmentRange(ptr() + segment_size_ * begin, segment_size_ * (end - begin));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>对齐示意</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">segment_size_ = 20MB</span><br><span class="line"></span><br><span class="line">地址:    0MB       20MB       40MB       60MB       80MB</span><br><span class="line">         |----------|----------|----------|----------|</span><br><span class="line">页索引:     0          1          2          3</span><br><span class="line"></span><br><span class="line">segmentLeft(25MB)  = 1  (25/20 = 1.25 → 1)</span><br><span class="line">segmentRight(25MB) = 2  (ceil(25)</span><br><span class="line">segmentLeft(40MB)  = 2</span><br><span class="line">segmentRight(40MB) = 2</span><br><span class="line"></span><br><span class="line">map(SegmentRange&#123;20MB, 30MB&#125;):</span><br><span class="line">  begin = segmentLeft(20MB)  = 1</span><br><span class="line">  end   = segmentRight(50MB) = 3</span><br><span class="line">  → 映射页 1 和页 2，实际映射 40MB (20MB~60MB)</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="九、IPC-共享支持"><a href="#九、IPC-共享支持" class="headerlink" title="九、IPC 共享支持"></a>九、IPC 共享支持</h2><h3 id="9-1-share：导出共享句柄"><a href="#9-1-share：导出共享句柄" class="headerlink" title="9.1 share：导出共享句柄"></a>9.1 share：导出共享句柄</h3><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L505-L524">NPUCachingAllocator.cpp:505-524</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">SegmentRange <span class="title">share</span><span class="params">(SegmentRange range, std::ostream&amp; buf)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">auto</span> begin = <span class="built_in">segmentLeft</span>(ra    <span class="keyword">auto</span> end = <span class="built_in">segmentRight</span>(range.ptr + range.size);</span><br><span class="line">    ShareHeader header&#123;segment_size_, end - begin&#125;;</span><br><span class="line">    buf.<span class="built_in">write</span>((<span class="type">const</span> <span class="type">char</span>*)&amp;header, <span class="built_in">sizeof</span>(ShareHeader));</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">auto</span> i : c10::<span class="built_in">irange</span>(begin, end)) &#123;</span><br><span class="line">        <span class="keyword">auto</span>&amp; handle = handles_.<span class="built_in">at</span>(i).<span class="built_in">value</span>();</span><br><span class="line">        <span class="keyword">if</span> (!handle.shareableHandle) &#123;</span><br><span class="line">            <span class="built_in">AclrtMemExportToShareableHandle</span>(handle.handle, ..., &amp;shareableHandle);</span><br><span class="line">            handle.shareableHandle = shareableHandle;  <span class="comment">// 惰性导出，缓存</span></span><br><span class="line">        &#125;</span><br><span class="line">        buf.<span class="built_in">write</span>((<span class="type">const</span> <span class="type">char</span>*)&amp;shareableHandt64_t));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">rangeFromHandles</span>(begin, end);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="9-2-fromShared：导入共享句柄"><a href="#9-2-fromShared：导入共享句柄" class="headerlink" title="9.2 fromShared：导入共享句柄"></a>9.2 fromShared：导入共享句柄</h3><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L526-L550">NPUCachingAllocator.cpp:526-550</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> std::unique_ptr&lt;ExpandableSegment&gt; <span class="title">fromShared</span><span class="params">(c10::DeviceIndex device, std::istream&amp; buf)</span> </span>&#123;</span><br><span class="line">    ShareHeader header&#123;&#125;;</span><br><span class="line">    buf.<span class="built_in">read</span>((<span class="type">char</span>*)&amp;header, <span class="built_in">sizeof</span>(ShareHeader));</span><br><span class="line">    <span class="keyword">auto</span> segment = std::<span class="built_in">make_unique</span>&lt;ExpandableSegment&gt;(</span><br><span class="line">        device, std::<span class="literal">nullopt</span>, heaent_size, header.num_handles);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">auto</span> i : c10::<span class="built_in">irange</span>(header.num_handles)) &#123;</span><br><span class="line">        <span class="type">uint64_t</span> shareableHandle = <span class="number">0</span>;</span><br><span class="line">        buf.<span class="built_in">read</span>((<span class="type">char</span>*)&amp;shareableHandle, <span class="built_in">sizeof</span>(<span class="type">uint64_t</span>));</span><br><span class="line">        <span class="built_in">AclrtMemImportFromShareableHandle</span>(shareableHandle, deviceId, &amp;handle);</span><br><span class="line">        segment-&gt;handles_.<span class="built_in">emplace_back</span>(Handle&#123;handle, shareableHandle&#125;);</span><br><span class="line">    &#125;</span><br><span class="line">    segment-&gt;<span class="built_in">mapAndSetAccess</span>(<span class="number">0</span>, header.num_handles);</span><br><span class="line">    <span class="keyword">return</span> segment;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="十、HCCL-通信集成"><a href="#十、HCCL-通信集成" class="headerlink" title="十、HCCL 通信集成"></a>十、HCCL 通信集成</h2><p>代码位置：<a href="file:///hj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L562-L572">NPUCachingAllocator.cpp:562-572</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">setHcclComm</span><span class="params">(std::shared_ptr&lt;c10d_npu::HCCLComm&gt; hcclComm)</span> </span>&#123;</span><br><span class="line">    hcclComm_ = hcclComm;</span><br><span class="line">    <span class="built_in">HcclCommSetMemoryRangeFace</span>(hcclComm_-&gt;<span class="built_in">getHcclComm</span>(), ptr_,</span><br><span class="line">        segment_size_ * max_handles_, <span class="number">0</span>, <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">auto</span> i : c10::<span class="built_in">irange</span>(handles_.<span class="built_in">size</span>())) &#123;</span><br><span class="line">        <span class="built_in">HcclCommActivateCommMemoryFace</span>(hcclComm_-&gt;<span class="built_in">getHcclComm</span>(),</span><br><span class="line">            (<span class="type">char</span> *)ptr_ + i * segment_size_, segment_size_, <span class="number">0</span>,</span><br><span class="line">            handles_.<span class="built_in">at</span>(i).<span class="built_in">value</span>().handle, <span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当 HCCL 通信建立时，需要将可扩展段的虚拟地址范围和已映射的物理页注册到 HCCL，以支持 ZeroCopy 通信。</p>
+<hr>
+<h2 id="十一、Snapshot-中的可扩展段表示"><a href="#十一、Snapshot-中的可扩展段表示" class="headerlink" title="十一、Snapshot 中的可扩展段表示"></a>十一、Snapshot 中的可扩展段表示</h2><p>代码位置：<a href="file:///home/cjj/torch_npu/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L2015-L2052">NPUCachingAllocator.cpp:2015-2052</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 对于可扩展段，每个连续映射范围报告为一个段</span></span><br><span class="line"><span class="keyword">if</span> (head_block-&gt;prev &amp;&amp; head_block-&gt;prev-&gt;mapped) &#123;</span><br><span class="line">    <span class="keyword">continue</span>;  <span class="comment">// 跳过非头部的已映射块</span></span><br><span class="line">fo.is_expandable = head_block-&gt;expandable_segment_;</span><br><span class="line"></span><br><span class="line"><span class="type">const</span> Block *block = head_block;</span><br><span class="line"><span class="keyword">while</span> (block != <span class="literal">nullptr</span> &amp;&amp; block-&gt;mapped) &#123;</span><br><span class="line">    <span class="comment">// 只遍历已映射的块</span></span><br><span class="line">    block = block-&gt;next;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>一个 ExpandableSegment 可能包含多个不连续的已映射范围，每个范围在 snapshot 中报告为独立的段。</p>
+<hr>
+<h2 id="十二、完整生命周期流程图"><a href="#十二、完整生命周期流程图" class="headerlink" title="十二、完整生命周期流程图"></a>十二、完整生命周期流程图</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line">┌───────────────────────────────────────────────────────────────────┐</span><br><span class="line">│                        ExpandableSegment 生命周期                        │</span><br><span class="line">├─────────────────────────────────────────────────────────────────────────┤</span><br><span class="line">│                                                                         │</span><br><span class="line">│  1. 创建                                                        │</span><br><span class="line">│     find_expandable_block() 未找到可用空间                               │</span><br><span class="line">│     ├── new ExpandableSegment(device, stream, segment_size)             │</span><br><span class="line">│     │   └── AclrtReserveMemAddress → 预留虚拟地址空间                   │</span><br><span class="line">│     ├── new Block(mapped=false, expandable_segment_=es)                │</span><br><span class="line">│     └── pool-&gt;unmapped.insert(block)                                   │</span><br><span class="line">│                                                                       │</span><br><span class="line">│  2. 映射（分配物理内存）                                                 │</span><br><span class="line">│     try_allocate_expandable_block()                                     │</span><br><span class="line">│     ├── find_expandable_block() → candidate (unmapped)                  │</span><br><span class="line">│     ├── map_block(candidate, size)                                      │</span><br><span class="line">│     │   └── ExpandableSegment::map(range, pool)                        │</span><br><span class="line">│     │       ├── 复用 free_physical_hanallocPhysical     │</span><br><span class="line">│     │       └── AclrtMapMem → 映射物理页到虚拟地址                      │</span><br><span class="line">│     └── 返回 mapped block                                              │</span><br><span class="line">│                                                                         │</span><br><span class="line">│  3. 使用                                                                │</span><br><span class="line">│     Block 处于 allocated 状态，mapped=true                              │</span><br><span class="line">│     用户通过虚拟地址访问物理内存                               │</span><br><span class="line">│                                                                         │</span><br><span class="line">│  4. 释放（回缓存）                                                      │</span><br><span class="line">│     free_block(block)                                                   │</span><br><span class="line">│     ├── try_merge_blocks → 合并相邻空闲块                               │</span><br><span class="line">│     └── pool-&gt;blocks.insert(block)  → 放回空闲池                        │</span><br><span class="line">│                                                           │</span><br><span class="line">│  5. 回收物理内存（OOM 或 emptyCache）                                   │</span><br><span class="line">│     unmap_block(block, context, free_physical)                          │</span><br><span class="line">│     ├── ExpandableSegment::unmap(range, pool)                           │</span><br><span class="line">│     │   └── unmapHandles → AclrtUnmapMem + 缓存/释放物理句柄           │</span><br><span class="line">│     ├── block-&gt;mapped = false                                           │</span><br><span class="line">│     ├── try_merge_blocks → 合并相邻 unmapped 块                         │</span><br><span class="line">│     └── pool-&gt;unmapped.insert(block)                                    │</span><br><span class="line">│                                                                         │</span><br><span class="line">│  6. 销毁                                                                │</span><br><span class="line">│     release_expandable_segment(block)                                   │</span><br><span class="line">│     ├── expandable_segments_.erase(it)                                  │</span><br><span class="line">│     ├── delete ExpandableSegment                                        │</span><br><span class="line">│     │   ├── ~ExpandableSegment()                                        │</span><br><span class="line">│     │   │   ├── forEachAllocatedRange → unmapHandles (AclrtFreePhysical)│</span><br><span class="line">│     │   │   └── AclrtReleaseMemAddress → 释放虚拟地址空间               │</span><br><span class="line">│     │   └──                                                             │</span><br><span class="line">│     └── delete block                                                    │</span><br><span class="line">│                                                                   │</span><br><span class="line">└─────────────────────────────────────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="十三、与传统模式的对比总结"><a href="#十三、与传统模式的对比总结" class="headerlink" title="十三、与传统模式的对比总结"></a>十三、与传统模式的对比总结</h2><p>| 维度 | 传统模式 (<code>expandable_segments=False</code>) | 可扩展模式 (<code>expandable_segments=True</code>) |<br>|——|—————————————|—————————————-建** | <code>AclrtMallocAlign32</code> 一次性分配物理内存 | <code>AclrtReserveMemAddress</code> 预留虚拟地址，按需映射物理页 |<br>| <strong>段大小</strong> | 固定，由 <code>get_allocation_size</code> 决定 | 动态增长，虚拟地址空间可达 NPU 总内存 1.125 倍 |<br>| <strong>分配粒度</strong> | 整段分配 | 按页映射（2MB&#x2F;20MB&#x2F;1GB） |<br>| <strong>空闲回收</strong> | 只能释放完整空闲段 | 可按页 unmap 回收物理内存 |<br>| <strong>碎片类型</strong> | 段间碎片（slivers） | 页内对齐碎片（较小） |<br>| <strong>OOM 恢复</strong>闲段，可能无法回收足够空间 | 按页释放空闲物理内存，回收更灵活 |<br>| <strong>分割策略</strong> | <code>remaining &gt; kSmallSize(1MB)</code> | <code>remaining &gt;= kMinBlockSize(512B)</code> |<br>| <strong>inactive_split</strong> | 计入统计 | 不计入（空闲页总是可释放的） |<br>| <strong>初始分配速度</strong> | 快（单次 <code>AclrtMallocAlign32</code>） | 稍慢（需 <code>AclrtMallocPhysical</code> + <code>AclrtMapMem</code>） |<br>| <strong>IPC 支持</strong> | 支持 | 不支持（可临时禁用） |<br>| <strong>配置互斥</strong> | 无 | 与 <code>max_split_size_mb</code>、<code>garbage_collection_threshold</code> 互斥 |<br>| <strong>底层 API</strong> | <code>AclrtMallocAlign32</code> &#x2F; <code>AclrtFree</code> | <code>AclrtReserveMemAddress</code> &#x2F; <code>AclrtMallocPhysical</code> &#x2F; <code>AclrtMapMem</code> &#x2F; <code>AclrtUnmapMem</code> &#x2F; <code>AclrtFreePhysical</code> &#x2F; <code>AclrtReleaseMemAddress</code> |</p>
+<hr>
+<h2 id="十四、已知限制"><a href="#十四、已知限制" class="headerlink" title="十四、已知限制"></a>十四、已知限制</h2><ol>
+<li><strong>初始分配速度较慢</strong>：每次 map 需要调用 <code>AclrtMallocPhysical</code> + <code>AclrtMapMem</code>，比单次 <code>AclrtMallocAlign32</code> 慢</li>
+<li><strong>IPC 不支持</strong>：可扩展段的 NPU 张量不能跨进程共享（如多进程 DataLoader），但可临时禁用 <code>expants</code> 来分配需要跨进程的张量</li>
+<li><strong>物理内存句柄不可拆分</strong>：NPU API 限制，一个物理句柄映射后不能拆分，即使它包含多个页</li>
+<li><strong>map&#x2F;unmap 开销与句柄数成正比</strong>：映射 10 个独立的 2MB 页比映射 1 个 20MB 页慢 10 倍</li>
+<li><strong>unmap 需要同步</strong>：<code>unmapHandles</code> 中调用 <code>npuSynchronizeDevice()</code>，这是一个昂贵的同步操作</li>
+<li><strong>与 NPU Graph 的兼容性</strong>：<code>pin_memory_expandable_segments</code> 与 ACLGraph capture 不兼容</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/myblog/2026/04/21/triton%E5%AD%A6%E4%B9%A0%E8%AE%A1%E5%88%92/" rel="prev" title="triton学习计划">
+                  <i class="fa fa-angle-left"></i> triton学习计划
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/myblog/2026/05/19/10_DVM%E5%AE%9E%E6%88%98%E6%A1%88%E4%BE%8B%EF%BC%9AAttention%E7%AE%97%E5%AD%90%E4%BC%98%E5%8C%96/" rel="next" title="DVM实战案例：Attention算子优化">
+                  DVM实战案例：Attention算子优化 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2025 – 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">chujinjin</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/myblog/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/myblog/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/myblog/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/myblog/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/myblog/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"chujinjin101.github.io","root":"/myblog/","images":"/myblog/images","scheme":"Pisces","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/myblog/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/myblog/js/config.js" defer></script>
+
+    <meta name="description" content="DVM虚拟机：AIV核执行引擎前言DVM虚拟机是运行在Ascend NPU上的字节码解释执行引擎。它接收Host侧生成的字节码指令，在Device侧进行解释执行。本文将深入解析AIV（AI Vector）核虚拟机的实现原理，揭示DVM如何在微秒级完成算子编译和执行。  一、虚拟机概述1.1 执行架构12345678910111213141516171819202122┌──────────────">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DVM虚拟机：AIV核执行引擎">
+<meta property="og:url" content="https://chujinjin101.github.io/myblog/2026/05/19/07_DVM%E8%99%9A%E6%8B%9F%E6%9C%BA%EF%BC%9AAIV%E6%A0%B8%E6%89%A7%E8%A1%8C%E5%BC%95%E6%93%8E/index.html">
+<meta property="og:site_name" content="chu的技术博客">
+<meta property="og:description" content="DVM虚拟机：AIV核执行引擎前言DVM虚拟机是运行在Ascend NPU上的字节码解释执行引擎。它接收Host侧生成的字节码指令，在Device侧进行解释执行。本文将深入解析AIV（AI Vector）核虚拟机的实现原理，揭示DVM如何在微秒级完成算子编译和执行。  一、虚拟机概述1.1 执行架构12345678910111213141516171819202122┌──────────────">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-05-19T08:33:04.000Z">
+<meta property="article:modified_time" content="2026-05-19T12:00:03.588Z">
+<meta property="article:author" content="chujinjin">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://chujinjin101.github.io/myblog/2026/05/19/07_DVM%E8%99%9A%E6%8B%9F%E6%9C%BA%EF%BC%9AAIV%E6%A0%B8%E6%89%A7%E8%A1%8C%E5%BC%95%E6%93%8E/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://chujinjin101.github.io/myblog/2026/05/19/07_DVM%E8%99%9A%E6%8B%9F%E6%9C%BA%EF%BC%9AAIV%E6%A0%B8%E6%89%A7%E8%A1%8C%E5%BC%95%E6%93%8E/","path":"2026/05/19/07_DVM虚拟机：AIV核执行引擎/","title":"DVM虚拟机：AIV核执行引擎"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>DVM虚拟机：AIV核执行引擎 | chu的技术博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/myblog/js/utils.js" defer></script><script src="/myblog/js/motion.js" defer></script><script src="/myblog/js/sidebar.js" defer></script><script src="/myblog/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/myblog/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/myblog/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/myblog/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">chu的技术博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/myblog/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/myblog/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-tags"><a href="/myblog/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#DVM%E8%99%9A%E6%8B%9F%E6%9C%BA%EF%BC%9AAIV%E6%A0%B8%E6%89%A7%E8%A1%8C%E5%BC%95%E6%93%8E"><span class="nav-number">1.</span> <span class="nav-text">DVM虚拟机：AIV核执行引擎</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%A6%82%E8%BF%B0"><span class="nav-number">1.2.</span> <span class="nav-text">一、虚拟机概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-%E6%89%A7%E8%A1%8C%E6%9E%B6%E6%9E%84"><span class="nav-number">1.2.1.</span> <span class="nav-text">1.1 执行架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-%E6%A0%B8%E5%BF%83%E7%89%B9%E7%82%B9"><span class="nav-number">1.2.2.</span> <span class="nav-text">1.2 核心特点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%85%A5%E5%8F%A3"><span class="nav-number">1.3.</span> <span class="nav-text">二、虚拟机入口</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-%E5%85%A5%E5%8F%A3%E5%87%BD%E6%95%B0"><span class="nav-number">1.3.1.</span> <span class="nav-text">2.1 入口函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-%E5%85%A5%E5%8F%A3%E7%BC%96%E7%A0%81%E6%A0%BC%E5%BC%8F"><span class="nav-number">1.3.2.</span> <span class="nav-text">2.2 入口编码格式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E3%80%81Vector%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.4.</span> <span class="nav-text">三、Vector虚拟机实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-%E4%B8%BB%E6%89%A7%E8%A1%8C%E5%BE%AA%E7%8E%AF"><span class="nav-number">1.4.1.</span> <span class="nav-text">3.1 主执行循环</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-Load%E6%8C%87%E4%BB%A4%E6%89%A7%E8%A1%8C"><span class="nav-number">1.4.2.</span> <span class="nav-text">3.2 Load指令执行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-Store%E6%8C%87%E4%BB%A4%E6%89%A7%E8%A1%8C"><span class="nav-number">1.4.3.</span> <span class="nav-text">3.3 Store指令执行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-Binary%E6%8C%87%E4%BB%A4%E6%89%A7%E8%A1%8C"><span class="nav-number">1.4.4.</span> <span class="nav-text">3.4 Binary指令执行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-Reduce%E6%8C%87%E4%BB%A4%E6%89%A7%E8%A1%8C"><span class="nav-number">1.4.5.</span> <span class="nav-text">3.5 Reduce指令执行</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E3%80%81Reduce%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.5.</span> <span class="nav-text">四、Reduce虚拟机实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-Reduce%E8%AE%BF%E9%97%AE%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.5.1.</span> <span class="nav-text">4.1 Reduce访问模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-Reduce%E5%85%A5%E5%8F%A3"><span class="nav-number">1.5.2.</span> <span class="nav-text">4.2 Reduce入口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-%E8%AE%BF%E9%97%AE%E5%87%BD%E6%95%B0%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.5.3.</span> <span class="nav-text">4.3 访问函数实现</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94%E3%80%81Cube%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.6.</span> <span class="nav-text">五、Cube虚拟机实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-Cube%E5%85%A5%E5%8F%A3"><span class="nav-number">1.6.1.</span> <span class="nav-text">5.1 Cube入口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-Cube%E6%89%A7%E8%A1%8C"><span class="nav-number">1.6.2.</span> <span class="nav-text">5.2 Cube执行</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD%E3%80%81%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86"><span class="nav-number">1.7.</span> <span class="nav-text">六、内存管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-UB%E5%86%85%E5%AD%98%E5%B8%83%E5%B1%80"><span class="nav-number">1.7.1.</span> <span class="nav-text">6.1 UB内存布局</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-UB%E5%86%85%E5%AD%98%E5%A4%8D%E7%94%A8"><span class="nav-number">1.7.2.</span> <span class="nav-text">6.2 UB内存复用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-GM%E8%AE%BF%E9%97%AE%E4%BC%98%E5%8C%96"><span class="nav-number">1.7.3.</span> <span class="nav-text">6.3 GM访问优化</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%83%E3%80%81Post-Execution%E6%9C%BA%E5%88%B6"><span class="nav-number">1.8.</span> <span class="nav-text">七、Post-Execution机制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#7-1-%E8%AE%BE%E8%AE%A1%E6%80%9D%E6%83%B3"><span class="nav-number">1.8.1.</span> <span class="nav-text">7.1 设计思想</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-2-%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%A0%81"><span class="nav-number">1.8.2.</span> <span class="nav-text">7.2 实现代码</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AB%E3%80%81SIMD%E6%8C%87%E4%BB%A4%E6%98%A0%E5%B0%84"><span class="nav-number">1.9.</span> <span class="nav-text">八、SIMD指令映射</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#8-1-Ascend-SIMD%E6%8C%87%E4%BB%A4"><span class="nav-number">1.9.1.</span> <span class="nav-text">8.1 Ascend SIMD指令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-2-%E6%8C%87%E4%BB%A4%E6%98%A0%E5%B0%84%E8%A1%A8"><span class="nav-number">1.9.2.</span> <span class="nav-text">8.2 指令映射表</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B9%9D%E3%80%81%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96"><span class="nav-number">1.10.</span> <span class="nav-text">九、性能优化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#9-1-%E5%A4%9A%E6%A0%B8%E5%B9%B6%E8%A1%8C"><span class="nav-number">1.10.1.</span> <span class="nav-text">9.1 多核并行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-2-%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90"><span class="nav-number">1.10.2.</span> <span class="nav-text">9.2 内存对齐</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-3-Bank%E5%86%B2%E7%AA%81%E9%81%BF%E5%85%8D"><span class="nav-number">1.10.3.</span> <span class="nav-text">9.3 Bank冲突避免</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%81%E3%80%81%E6%80%BB%E7%BB%93"><span class="nav-number">1.11.</span> <span class="nav-text">十、总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="nav-number">1.12.</span> <span class="nav-text">参考资料</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="chujinjin"
+      src="/myblog/images/mine.jpg">
+  <p class="site-author-name" itemprop="name">chujinjin</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/myblog/archives/">
+          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/chujinjin101" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;chujinjin101" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:you@example.com" title="Email → mailto:you@example.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>Email</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+        <div class="back-to-top animated" role="button" aria-label="返回顶部">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://chujinjin101.github.io/myblog/2026/05/19/07_DVM%E8%99%9A%E6%8B%9F%E6%9C%BA%EF%BC%9AAIV%E6%A0%B8%E6%89%A7%E8%A1%8C%E5%BC%95%E6%93%8E/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/myblog/images/mine.jpg">
+      <meta itemprop="name" content="chujinjin">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="chu的技术博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="DVM虚拟机：AIV核执行引擎 | chu的技术博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          DVM虚拟机：AIV核执行引擎
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2026-05-19 16:33:04 / 修改时间：20:00:03" itemprop="dateCreated datePublished" datetime="2026-05-19T16:33:04+08:00">2026-05-19</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="DVM虚拟机：AIV核执行引擎"><a href="#DVM虚拟机：AIV核执行引擎" class="headerlink" title="DVM虚拟机：AIV核执行引擎"></a>DVM虚拟机：AIV核执行引擎</h1><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>DVM虚拟机是运行在Ascend NPU上的字节码解释执行引擎。它接收Host侧生成的字节码指令，在Device侧进行解释执行。本文将深入解析AIV（AI Vector）核虚拟机的实现原理，揭示DVM如何在微秒级完成算子编译和执行。</p>
+<hr>
+<h2 id="一、虚拟机概述"><a href="#一、虚拟机概述" class="headerlink" title="一、虚拟机概述"></a>一、虚拟机概述</h2><h3 id="1-1-执行架构"><a href="#1-1-执行架构" class="headerlink" title="1.1 执行架构"></a>1.1 执行架构</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">┌─────────────────────────────────────────────────────────┐</span><br><span class="line">│                    Host侧                                │</span><br><span class="line">│  用户构图 → Normalize → CodeGen → 字节码                │</span><br><span class="line">└─────────────────────────────────────────────────────────┘</span><br><span class="line">                        │ Launch</span><br><span class="line">                        ↓</span><br><span class="line">┌─────────────────────────────────────────────────────────┐</span><br><span class="line">│                    Device侧                              │</span><br><span class="line">│  ┌─────────────────────────────────────────────────┐   │</span><br><span class="line">│  │              AIV核虚拟机                         │   │</span><br><span class="line">│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐         │   │</span><br><span class="line">│  │  │  Core0  │  │  Core1  │  │  Core2  │ ...     │   │</span><br><span class="line">│  │  │ vmain() │  │ vmain() │  │ vmain() │         │   │</span><br><span class="line">│  │  └─────────┘  └─────────┘  └─────────┘         │   │</span><br><span class="line">│  └─────────────────────────────────────────────────┘   │</span><br><span class="line">│                        │                                │</span><br><span class="line">│                        ↓                                │</span><br><span class="line">│  ┌─────────────────────────────────────────────────┐   │</span><br><span class="line">│  │              内存层次                            │   │</span><br><span class="line">│  │  GM (Global Memory) ←→ UB (Unified Buffer)      │   │</span><br><span class="line">│  └─────────────────────────────────────────────────┘   │</span><br><span class="line">└─────────────────────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-2-核心特点"><a href="#1-2-核心特点" class="headerlink" title="1.2 核心特点"></a>1.2 核心特点</h3><table>
+<thead>
+<tr>
+<th>特点</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Tile粒度执行</td>
+<td>将大张量切分为Tile逐块处理</td>
+</tr>
+<tr>
+<td>多核并行</td>
+<td>多个AIV Core并行执行</td>
+</tr>
+<tr>
+<td>Post-Execution</td>
+<td>隐藏解释执行开销</td>
+</tr>
+<tr>
+<td>UB内存复用</td>
+<td>高效的内存管理策略</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="二、虚拟机入口"><a href="#二、虚拟机入口" class="headerlink" title="二、虚拟机入口"></a>二、虚拟机入口</h2><h3 id="2-1-入口函数"><a href="#2-1-入口函数" class="headerlink" title="2.1 入口函数"></a>2.1 入口函数</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// vm_aiv.cce</span></span><br><span class="line"><span class="keyword">extern</span> <span class="string">&quot;C&quot;</span> <span class="function">__aicore__ <span class="type">void</span> <span class="title">vmain_vector</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">uint8_t</span> *code,        <span class="comment">// 字节码指针</span></span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">void</span> *workspace,      <span class="comment">// Workspace地址</span></span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">uint64_t</span> block_tile,  <span class="comment">// 每个Block处理的Tile数</span></span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">uint64_t</span> block_tail   <span class="comment">// 尾部Block数量</span></span></span></span><br><span class="line"><span class="params"><span class="function">)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">extern</span> <span class="string">&quot;C&quot;</span> <span class="function">__aicore__ <span class="type">void</span> <span class="title">vmain_reduce</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">uint8_t</span> *code,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">void</span> *workspace,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">uint64_t</span> visit_id,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">uint64_t</span> visit_offset</span></span></span><br><span class="line"><span class="params"><span class="function">)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">extern</span> <span class="string">&quot;C&quot;</span> <span class="function">__aicore__ <span class="type">void</span> <span class="title">vmain_cube</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">uint8_t</span> *code,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">void</span> *workspace</span></span></span><br><span class="line"><span class="params"><span class="function">)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-2-入口编码格式"><a href="#2-2-入口编码格式" class="headerlink" title="2.2 入口编码格式"></a>2.2 入口编码格式</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 入口类型</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> V_ENTRY_TYPE_V    0x0000000000000000UL  <span class="comment">// Vector入口</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> V_ENTRY_TYPE_C    0x4000000000000000UL  <span class="comment">// Cube入口</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> V_ENTRY_TYPE_VE   0x8000000000000000UL  <span class="comment">// Reduce入口</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Vector入口参数</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> V_ENTRY_V_TILE_BODY_OFFSET   0</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> V_ENTRY_V_TILE_TAIL_OFFSET   16</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Reduce入口参数</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> V_ENTRY_VE_VISIT_ID_OFFSET     0</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> V_ENTRY_VE_VISIT_OFFSET_OFFSET 16</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="三、Vector虚拟机实现"><a href="#三、Vector虚拟机实现" class="headerlink" title="三、Vector虚拟机实现"></a>三、Vector虚拟机实现</h2><h3 id="3-1-主执行循环"><a href="#3-1-主执行循环" class="headerlink" title="3.1 主执行循环"></a>3.1 主执行循环</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">__aicore__ <span class="type">void</span> <span class="title">vmain_vector</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">uint8_t</span> *code,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">void</span> *workspace,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">uint64_t</span> block_tile,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">uint64_t</span> block_tail</span></span></span><br><span class="line"><span class="params"><span class="function">)</span> </span>&#123;</span><br><span class="line">  <span class="comment">// 获取Block ID</span></span><br><span class="line">  <span class="keyword">auto</span> block_id = <span class="built_in">GetBlockIdx</span>();</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 计算Tile范围</span></span><br><span class="line">  <span class="type">uint64_t</span> tile_start = block_id * block_tile;</span><br><span class="line">  <span class="type">uint64_t</span> tile_end = tile_start + block_tile;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 处理尾部</span></span><br><span class="line">  <span class="keyword">if</span> (block_id &lt; block_tail) &#123;</span><br><span class="line">    tile_end--;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 执行每个Tile</span></span><br><span class="line">  <span class="keyword">for</span> (<span class="type">uint64_t</span> tile = tile_start; tile &lt; tile_end; ++tile) &#123;</span><br><span class="line">    <span class="built_in">ExecuteTile</span>(code, workspace, tile);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">__aicore__ <span class="type">void</span> <span class="title">ExecuteTile</span><span class="params">(<span class="type">uint8_t</span> *code, <span class="type">void</span> *workspace, <span class="type">uint64_t</span> tile)</span> </span>&#123;</span><br><span class="line">  <span class="type">uint64_t</span> *pc = <span class="built_in">reinterpret_cast</span>&lt;<span class="type">uint64_t</span> *&gt;(code);</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">    <span class="keyword">auto</span> insn = *pc;</span><br><span class="line">    <span class="keyword">auto</span> op = <span class="built_in">static_cast</span>&lt;vSimdInsnID&gt;(insn &amp; <span class="number">0xFF</span>);</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">switch</span> (op) &#123;</span><br><span class="line">      <span class="keyword">case</span> V_LOAD:</span><br><span class="line">        <span class="built_in">ExecLoad</span>(pc, workspace, tile);</span><br><span class="line">        pc += <span class="number">3</span>;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">        </span><br><span class="line">      <span class="keyword">case</span> V_STORE:</span><br><span class="line">        <span class="built_in">ExecStore</span>(pc, workspace, tile);</span><br><span class="line">        pc += <span class="number">3</span>;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">        </span><br><span class="line">      <span class="keyword">case</span> V_ADD:</span><br><span class="line">      <span class="keyword">case</span> V_SUB:</span><br><span class="line">      <span class="keyword">case</span> V_MUL:</span><br><span class="line">      <span class="keyword">case</span> V_DIV:</span><br><span class="line">        <span class="built_in">ExecBinary</span>(pc, op);</span><br><span class="line">        pc += <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">        </span><br><span class="line">      <span class="keyword">case</span> V_SQRT:</span><br><span class="line">      <span class="keyword">case</span> V_EXP:</span><br><span class="line">      <span class="keyword">case</span> V_LOG:</span><br><span class="line">        <span class="built_in">ExecUnary</span>(pc, op);</span><br><span class="line">        pc += <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">        </span><br><span class="line">      <span class="keyword">case</span> V_RSUM_X:</span><br><span class="line">      <span class="keyword">case</span> V_RMAX_X:</span><br><span class="line">        <span class="built_in">ExecReduceX</span>(pc);</span><br><span class="line">        pc += <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">        </span><br><span class="line">      <span class="keyword">case</span> V_NOP:</span><br><span class="line">        <span class="keyword">return</span>;  <span class="comment">// 结束</span></span><br><span class="line">        </span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">        pc += <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-2-Load指令执行"><a href="#3-2-Load指令执行" class="headerlink" title="3.2 Load指令执行"></a>3.2 Load指令执行</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">__aicore__ <span class="type">void</span> <span class="title">ExecLoad</span><span class="params">(<span class="type">uint64_t</span> *insn, <span class="type">void</span> *workspace, <span class="type">uint64_t</span> tile)</span> </span>&#123;</span><br><span class="line">  vLoad op;</span><br><span class="line">  vLoad::<span class="built_in">Decode</span>(insn, op);</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 计算UB地址</span></span><br><span class="line">  <span class="keyword">auto</span> ub_addr = <span class="built_in">reinterpret_cast</span>&lt;<span class="type">uint8_t</span> *&gt;(workspace) + op.xn;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 计算GM地址</span></span><br><span class="line">  <span class="keyword">auto</span> gm_addr = <span class="built_in">reinterpret_cast</span>&lt;<span class="type">uint8_t</span> *&gt;(op.from) + tile * op.tile_stride;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 执行加载</span></span><br><span class="line">  <span class="keyword">if</span> (op.tail_iter &amp;&amp; tile &gt;= op.body_iter) &#123;</span><br><span class="line">    <span class="comment">// 尾部处理</span></span><br><span class="line">    <span class="built_in">Copy</span>(ub_addr, gm_addr, op.tail_iter * op.iter_size);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// 主体处理</span></span><br><span class="line">    <span class="built_in">Copy</span>(ub_addr, gm_addr, op.iter_size);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-3-Store指令执行"><a href="#3-3-Store指令执行" class="headerlink" title="3.3 Store指令执行"></a>3.3 Store指令执行</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">__aicore__ <span class="type">void</span> <span class="title">ExecStore</span><span class="params">(<span class="type">uint64_t</span> *insn, <span class="type">void</span> *workspace, <span class="type">uint64_t</span> tile)</span> </span>&#123;</span><br><span class="line">  vStore op;</span><br><span class="line">  vStore::<span class="built_in">Decode</span>(insn, op);</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 计算UB地址</span></span><br><span class="line">  <span class="keyword">auto</span> ub_addr = <span class="built_in">reinterpret_cast</span>&lt;<span class="type">uint8_t</span> *&gt;(workspace) + op.xn;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 计算GM地址</span></span><br><span class="line">  <span class="keyword">auto</span> gm_addr = <span class="built_in">reinterpret_cast</span>&lt;<span class="type">uint8_t</span> *&gt;(op.to) + tile * op.tile_stride;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 执行存储</span></span><br><span class="line">  <span class="keyword">if</span> (op.tail_iter &amp;&amp; tile &gt;= op.body_iter) &#123;</span><br><span class="line">    <span class="built_in">Copy</span>(gm_addr, ub_addr, op.tail_iter * op.iter_size);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="built_in">Copy</span>(gm_addr, ub_addr, op.iter_size);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-4-Binary指令执行"><a href="#3-4-Binary指令执行" class="headerlink" title="3.4 Binary指令执行"></a>3.4 Binary指令执行</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">__aicore__ <span class="type">void</span> <span class="title">ExecBinary</span><span class="params">(<span class="type">uint64_t</span> *insn, vSimdInsnID op)</span> </span>&#123;</span><br><span class="line">  vBinary binary;</span><br><span class="line">  vBinary::<span class="built_in">Decode</span>(insn, binary);</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">auto</span> xd = <span class="built_in">reinterpret_cast</span>&lt;half *&gt;(binary.xd);</span><br><span class="line">  <span class="keyword">auto</span> xn = <span class="built_in">reinterpret_cast</span>&lt;half *&gt;(binary.xn);</span><br><span class="line">  <span class="keyword">auto</span> xm = <span class="built_in">reinterpret_cast</span>&lt;half *&gt;(binary.xm);</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">switch</span> (op) &#123;</span><br><span class="line">    <span class="keyword">case</span> V_ADD:</span><br><span class="line">      <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; SIMD_WIDTH; ++i) &#123;</span><br><span class="line">        xd[i] = xn[i] + xm[i];</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">      </span><br><span class="line">    <span class="keyword">case</span> V_SUB:</span><br><span class="line">      <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; SIMD_WIDTH; ++i) &#123;</span><br><span class="line">        xd[i] = xn[i] - xm[i];</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">      </span><br><span class="line">    <span class="keyword">case</span> V_MUL:</span><br><span class="line">      <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; SIMD_WIDTH; ++i) &#123;</span><br><span class="line">        xd[i] = xn[i] * xm[i];</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">      </span><br><span class="line">    <span class="keyword">case</span> V_DIV:</span><br><span class="line">      <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; SIMD_WIDTH; ++i) &#123;</span><br><span class="line">        xd[i] = xn[i] / xm[i];</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">      </span><br><span class="line">    <span class="comment">// ... 更多操作</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-5-Reduce指令执行"><a href="#3-5-Reduce指令执行" class="headerlink" title="3.5 Reduce指令执行"></a>3.5 Reduce指令执行</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">__aicore__ <span class="type">void</span> <span class="title">ExecReduceX</span><span class="params">(<span class="type">uint64_t</span> *insn)</span> </span>&#123;</span><br><span class="line">  vReduce op;</span><br><span class="line">  vReduce::<span class="built_in">Decode</span>(insn, op);</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">auto</span> xd = <span class="built_in">reinterpret_cast</span>&lt;<span class="type">float</span> *&gt;(op.xd);</span><br><span class="line">  <span class="keyword">auto</span> xn = <span class="built_in">reinterpret_cast</span>&lt;<span class="type">float</span> *&gt;(op.xn);</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 初始化累加器</span></span><br><span class="line">  <span class="type">float</span> acc = <span class="number">0.0f</span>;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// X方向归约</span></span><br><span class="line">  <span class="keyword">for</span> (<span class="type">uint64_t</span> i = <span class="number">0</span>; i &lt; op.iter_num; ++i) &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">uint64_t</span> j = <span class="number">0</span>; j &lt; op.simd_width; ++j) &#123;</span><br><span class="line">      acc += xn[i * op.simd_width + j];</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 处理尾部</span></span><br><span class="line">  <span class="keyword">for</span> (<span class="type">uint64_t</span> j = <span class="number">0</span>; j &lt; op.iter_tail; ++j) &#123;</span><br><span class="line">    acc += xn[op.iter_num * op.simd_width + j];</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  *xd = acc;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="四、Reduce虚拟机实现"><a href="#四、Reduce虚拟机实现" class="headerlink" title="四、Reduce虚拟机实现"></a>四、Reduce虚拟机实现</h2><h3 id="4-1-Reduce访问模式"><a href="#4-1-Reduce访问模式" class="headerlink" title="4.1 Reduce访问模式"></a>4.1 Reduce访问模式</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 访问模式定义</span></span><br><span class="line"><span class="keyword">enum</span> <span class="title class_">VisitMode</span> &#123;</span><br><span class="line">  V_VISIT_RED_1 = <span class="number">0</span>,  <span class="comment">// 单Reduce维度</span></span><br><span class="line">  V_VISIT_RED_2,      <span class="comment">// 双Reduce维度</span></span><br><span class="line">  V_VISIT_RED_3,      <span class="comment">// 三Reduce维度</span></span><br><span class="line">  V_VISIT_RED_4,      <span class="comment">// 四Reduce维度</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 访问函数表</span></span><br><span class="line"><span class="keyword">extern</span> <span class="string">&quot;C&quot;</span> __aicore__ VisitFunc g_visit_funcs[];</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">void</span> <span class="params">(*VisitFunc)</span><span class="params">(<span class="type">uint64_t</span> tile, <span class="type">void</span> *workspace, <span class="type">uint8_t</span> *code)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-2-Reduce入口"><a href="#4-2-Reduce入口" class="headerlink" title="4.2 Reduce入口"></a>4.2 Reduce入口</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">__aicore__ <span class="type">void</span> <span class="title">vmain_reduce</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">uint8_t</span> *code,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">void</span> *workspace,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">uint64_t</span> visit_id,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">uint64_t</span> visit_offset</span></span></span><br><span class="line"><span class="params"><span class="function">)</span> </span>&#123;</span><br><span class="line">  <span class="comment">// 获取Block ID</span></span><br><span class="line">  <span class="keyword">auto</span> block_id = <span class="built_in">GetBlockIdx</span>();</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 计算Tile</span></span><br><span class="line">  <span class="type">uint64_t</span> tile = block_id + visit_offset;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 调用访问函数</span></span><br><span class="line">  g_visit_funcs[visit_id](tile, workspace, code);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-3-访问函数实现"><a href="#4-3-访问函数实现" class="headerlink" title="4.3 访问函数实现"></a>4.3 访问函数实现</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 单维度Reduce访问</span></span><br><span class="line"><span class="function">__aicore__ <span class="type">void</span> <span class="title">VisitRed1</span><span class="params">(<span class="type">uint64_t</span> tile, <span class="type">void</span> *workspace, <span class="type">uint8_t</span> *code)</span> </span>&#123;</span><br><span class="line">  <span class="comment">// 计算Reduce索引</span></span><br><span class="line">  <span class="type">uint64_t</span> red_idx = tile % reduce_dim_;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 执行Reduce操作</span></span><br><span class="line">  <span class="built_in">ExecuteReduceTile</span>(code, workspace, red_idx);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 双维度Reduce访问</span></span><br><span class="line"><span class="function">__aicore__ <span class="type">void</span> <span class="title">VisitRed2</span><span class="params">(<span class="type">uint64_t</span> tile, <span class="type">void</span> *workspace, <span class="type">uint8_t</span> *code)</span> </span>&#123;</span><br><span class="line">  <span class="type">uint64_t</span> red_idx0 = tile % reduce_dim0_;</span><br><span class="line">  <span class="type">uint64_t</span> red_idx1 = (tile / reduce_dim0_) % reduce_dim1_;</span><br><span class="line">  </span><br><span class="line">  <span class="built_in">ExecuteReduceTile2D</span>(code, workspace, red_idx0, red_idx1);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="五、Cube虚拟机实现"><a href="#五、Cube虚拟机实现" class="headerlink" title="五、Cube虚拟机实现"></a>五、Cube虚拟机实现</h2><h3 id="5-1-Cube入口"><a href="#5-1-Cube入口" class="headerlink" title="5.1 Cube入口"></a>5.1 Cube入口</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">__aicore__ <span class="type">void</span> <span class="title">vmain_cube</span><span class="params">(<span class="type">uint8_t</span> *code, <span class="type">void</span> *workspace)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">auto</span> block_id = <span class="built_in">GetBlockIdx</span>();</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 解析Cube指令</span></span><br><span class="line">  vCubeOp *cube = <span class="built_in">reinterpret_cast</span>&lt;vCubeOp *&gt;(code);</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">if</span> (block_id &lt; cube-&gt;block_dim) &#123;</span><br><span class="line">    <span class="built_in">ExecuteCube</span>(cube, block_id);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-2-Cube执行"><a href="#5-2-Cube执行" class="headerlink" title="5.2 Cube执行"></a>5.2 Cube执行</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">__aicore__ <span class="type">void</span> <span class="title">ExecuteCube</span><span class="params">(vCubeOp *cube, <span class="type">uint64_t</span> block_id)</span> </span>&#123;</span><br><span class="line">  <span class="comment">// 获取矩阵参数</span></span><br><span class="line">  <span class="keyword">auto</span> gm_a = <span class="built_in">reinterpret_cast</span>&lt;half *&gt;(cube-&gt;gm_a);</span><br><span class="line">  <span class="keyword">auto</span> gm_b = <span class="built_in">reinterpret_cast</span>&lt;half *&gt;(cube-&gt;gm_b);</span><br><span class="line">  <span class="keyword">auto</span> gm_c = <span class="built_in">reinterpret_cast</span>&lt;<span class="type">float</span> *&gt;(cube-&gt;gm_c);</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 分块计算</span></span><br><span class="line">  <span class="type">uint64_t</span> m_start = block_id * m_per_core;</span><br><span class="line">  <span class="type">uint64_t</span> m_end = std::<span class="built_in">min</span>(m_start + m_per_core, total_m);</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">for</span> (<span class="type">uint64_t</span> m = m_start; m &lt; m_end; ++m) &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">uint64_t</span> n = <span class="number">0</span>; n &lt; total_n; ++n) &#123;</span><br><span class="line">      <span class="type">float</span> sum = <span class="number">0.0f</span>;</span><br><span class="line">      </span><br><span class="line">      <span class="keyword">for</span> (<span class="type">uint64_t</span> k = <span class="number">0</span>; k &lt; total_k; ++k) &#123;</span><br><span class="line">        half a_val = cube-&gt;flags &amp; V_CUBE_FLAG_TRANS_A ? gm_a[k * lda + m] : gm_a[m * lda + k];</span><br><span class="line">        half b_val = cube-&gt;flags &amp; V_CUBE_FLAG_TRANS_B ? gm_b[n * ldb + k] : gm_b[k * ldb + n];</span><br><span class="line">        sum += <span class="built_in">static_cast</span>&lt;<span class="type">float</span>&gt;(a_val) * <span class="built_in">static_cast</span>&lt;<span class="type">float</span>&gt;(b_val);</span><br><span class="line">      &#125;</span><br><span class="line">      </span><br><span class="line">      <span class="comment">// 添加Bias</span></span><br><span class="line">      <span class="keyword">if</span> (cube-&gt;flags &amp; V_CUBE_FLAG_WITH_BIAS) &#123;</span><br><span class="line">        <span class="keyword">auto</span> gm_bias = <span class="built_in">reinterpret_cast</span>&lt;<span class="type">float</span> *&gt;(cube-&gt;gm_bias);</span><br><span class="line">        sum += gm_bias[n];</span><br><span class="line">      &#125;</span><br><span class="line">      </span><br><span class="line">      gm_c[m * ldc + n] = sum;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="六、内存管理"><a href="#六、内存管理" class="headerlink" title="六、内存管理"></a>六、内存管理</h2><h3 id="6-1-UB内存布局"><a href="#6-1-UB内存布局" class="headerlink" title="6.1 UB内存布局"></a>6.1 UB内存布局</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">┌─────────────────────────────────────────────────────────┐</span><br><span class="line">│                    UB内存布局                            │</span><br><span class="line">├─────────────────────────────────────────────────────────┤</span><br><span class="line">│  [0, tile_size)           : 输入缓冲区0                 │</span><br><span class="line">│  [tile_size, 2*tile_size) : 输入缓冲区1                 │</span><br><span class="line">│  [2*tile_size, 3*tile_size): 输出缓冲区                 │</span><br><span class="line">│  [...]                    : 中间结果                    │</span><br><span class="line">└─────────────────────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-2-UB内存复用"><a href="#6-2-UB内存复用" class="headerlink" title="6.2 UB内存复用"></a>6.2 UB内存复用</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Host侧分配xbuf</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">AllocOutXBuf</span><span class="params">(NDObject *op)</span> </span>&#123;</span><br><span class="line">  <span class="comment">// 尝试复用输入xbuf</span></span><br><span class="line">  <span class="keyword">if</span> (op-&gt;flags_ &amp; F_LR &amp;&amp; op-&gt;lhs_-&gt;flags_ &amp; OBJ_FLAG_FREE_LHS) &#123;</span><br><span class="line">    op-&gt;xbuf_ = op-&gt;lhs_-&gt;xbuf_;</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">if</span> (op-&gt;flags_ &amp; F_RR &amp;&amp; op-&gt;rhs_-&gt;flags_ &amp; OBJ_FLAG_FREE_RHS) &#123;</span><br><span class="line">    op-&gt;xbuf_ = op-&gt;rhs_-&gt;xbuf_;</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 从空闲列表分配</span></span><br><span class="line">  op-&gt;xbuf_ = free_xbuf_.<span class="built_in">Pop</span>(op);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-3-GM访问优化"><a href="#6-3-GM访问优化" class="headerlink" title="6.3 GM访问优化"></a>6.3 GM访问优化</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 双缓冲加载</span></span><br><span class="line"><span class="function">__aicore__ <span class="type">void</span> <span class="title">PingPongLoad</span><span class="params">(<span class="type">uint8_t</span> *ub_ping, <span class="type">uint8_t</span> *ub_pong, </span></span></span><br><span class="line"><span class="params"><span class="function">                              <span class="type">uint8_t</span> *gm, <span class="type">uint64_t</span> tile_size)</span> </span>&#123;</span><br><span class="line">  <span class="comment">// 预加载第一块</span></span><br><span class="line">  <span class="built_in">CopyAsync</span>(ub_ping, gm, tile_size);</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">for</span> (<span class="type">uint64_t</span> i = <span class="number">0</span>; i &lt; total_tiles - <span class="number">1</span>; ++i) &#123;</span><br><span class="line">    <span class="comment">// 等待前一块完成</span></span><br><span class="line">    <span class="built_in">WaitCopy</span>();</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 异步加载下一块</span></span><br><span class="line">    <span class="built_in">CopyAsync</span>(ub_pong, gm + (i + <span class="number">1</span>) * tile_size, tile_size);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 处理当前块</span></span><br><span class="line">    <span class="built_in">ProcessTile</span>(ub_ping);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 交换缓冲区</span></span><br><span class="line">    std::<span class="built_in">swap</span>(ub_ping, ub_pong);</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 处理最后一块</span></span><br><span class="line">  <span class="built_in">WaitCopy</span>();</span><br><span class="line">  <span class="built_in">ProcessTile</span>(ub_ping);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="七、Post-Execution机制"><a href="#七、Post-Execution机制" class="headerlink" title="七、Post-Execution机制"></a>七、Post-Execution机制</h2><h3 id="7-1-设计思想"><a href="#7-1-设计思想" class="headerlink" title="7.1 设计思想"></a>7.1 设计思想</h3><p>Post-Execution通过流水线隐藏解释执行开销：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">传统执行：</span><br><span class="line">Tile0解释 → Tile0执行 → Tile1解释 → Tile1执行 → ...</span><br><span class="line"></span><br><span class="line">Post-Execution：</span><br><span class="line">Tile0解释 → Tile1解释 → Tile2解释 → ...</span><br><span class="line">            Tile0执行 → Tile1执行 → Tile2执行 → ...</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-2-实现代码"><a href="#7-2-实现代码" class="headerlink" title="7.2 实现代码"></a>7.2 实现代码</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">__aicore__ <span class="type">void</span> <span class="title">ExecuteWithPostExec</span><span class="params">(<span class="type">uint8_t</span> *code, <span class="type">void</span> *workspace, <span class="type">uint64_t</span> num_tiles)</span> </span>&#123;</span><br><span class="line">  <span class="type">uint64_t</span> *pc = <span class="built_in">reinterpret_cast</span>&lt;<span class="type">uint64_t</span> *&gt;(code);</span><br><span class="line">  <span class="type">uint64_t</span> tile = <span class="number">0</span>;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 预解释前几个Tile</span></span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; POST_EXEC_DEPTH &amp;&amp; tile &lt; num_tiles; ++i, ++tile) &#123;</span><br><span class="line">    <span class="built_in">InterpretTile</span>(pc, workspace, tile);</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 流水线执行</span></span><br><span class="line">  <span class="keyword">while</span> (tile &lt; num_tiles) &#123;</span><br><span class="line">    <span class="comment">// 等待前一个Tile执行完成</span></span><br><span class="line">    <span class="built_in">WaitExecution</span>();</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 解释下一个Tile</span></span><br><span class="line">    <span class="built_in">InterpretTile</span>(pc, workspace, tile);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 启动当前Tile执行</span></span><br><span class="line">    <span class="built_in">StartExecution</span>();</span><br><span class="line">    </span><br><span class="line">    ++tile;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 等待所有执行完成</span></span><br><span class="line">  <span class="built_in">WaitAllExecutions</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="八、SIMD指令映射"><a href="#八、SIMD指令映射" class="headerlink" title="八、SIMD指令映射"></a>八、SIMD指令映射</h2><h3 id="8-1-Ascend-SIMD指令"><a href="#8-1-Ascend-SIMD指令" class="headerlink" title="8.1 Ascend SIMD指令"></a>8.1 Ascend SIMD指令</h3><p>DVM虚拟机将字节码指令映射到Ascend SIMD指令：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Ascend SIMD指令示例</span></span><br><span class="line"><span class="function">__aicore__ <span class="type">void</span> <span class="title">vadd</span><span class="params">(half *dst, half *src0, half *src1, <span class="type">uint64_t</span> num)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">uint64_t</span> i = <span class="number">0</span>; i &lt; num; i += SIMD_WIDTH) &#123;</span><br><span class="line">    <span class="comment">// 使用Ascend向量指令</span></span><br><span class="line">    <span class="function">__asm__ <span class="title">volatile</span> <span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">      <span class="string">&quot;vadd.half %0, %1, %2\n&quot;</span></span></span></span><br><span class="line"><span class="params"><span class="function">      : <span class="string">&quot;=v&quot;</span>(dst[i])</span></span></span><br><span class="line"><span class="params"><span class="function">      : <span class="string">&quot;v&quot;</span>(src0[i]), <span class="string">&quot;v&quot;</span>(src1[i])</span></span></span><br><span class="line"><span class="params"><span class="function">    )</span></span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">__aicore__ <span class="type">void</span> <span class="title">vmul</span><span class="params">(half *dst, half *src0, half *src1, <span class="type">uint64_t</span> num)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">uint64_t</span> i = <span class="number">0</span>; i &lt; num; i += SIMD_WIDTH) &#123;</span><br><span class="line">    <span class="function">__asm__ <span class="title">volatile</span> <span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">      <span class="string">&quot;vmul.half %0, %1, %2\n&quot;</span></span></span></span><br><span class="line"><span class="params"><span class="function">      : <span class="string">&quot;=v&quot;</span>(dst[i])</span></span></span><br><span class="line"><span class="params"><span class="function">      : <span class="string">&quot;v&quot;</span>(src0[i]), <span class="string">&quot;v&quot;</span>(src1[i])</span></span></span><br><span class="line"><span class="params"><span class="function">    )</span></span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="8-2-指令映射表"><a href="#8-2-指令映射表" class="headerlink" title="8.2 指令映射表"></a>8.2 指令映射表</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 指令映射表</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">SimdEntry</span> &#123;</span><br><span class="line">  vSimdInsnID id;</span><br><span class="line">  SimdFunc func;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">SimdEntry simd_table[] = &#123;</span><br><span class="line">  &#123;V_ADD, ExecAdd&#125;,</span><br><span class="line">  &#123;V_SUB, ExecSub&#125;,</span><br><span class="line">  &#123;V_MUL, ExecMul&#125;,</span><br><span class="line">  &#123;V_DIV, ExecDiv&#125;,</span><br><span class="line">  &#123;V_SQRT, ExecSqrt&#125;,</span><br><span class="line">  &#123;V_EXP, ExecExp&#125;,</span><br><span class="line">  &#123;V_LOG, ExecLog&#125;,</span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function">__aicore__ <span class="type">void</span> <span class="title">ExecAdd</span><span class="params">(half *dst, half *src0, half *src1, <span class="type">uint64_t</span> num)</span> </span>&#123;</span><br><span class="line">  <span class="built_in">vadd</span>(dst, src0, src1, num);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="九、性能优化"><a href="#九、性能优化" class="headerlink" title="九、性能优化"></a>九、性能优化</h2><h3 id="9-1-多核并行"><a href="#9-1-多核并行" class="headerlink" title="9.1 多核并行"></a>9.1 多核并行</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Host侧设置Block维度</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">SetBlockDim</span><span class="params">(<span class="type">uint64_t</span> core_limit)</span> </span>&#123;</span><br><span class="line">  <span class="comment">// 根据Tile数量和核心数计算</span></span><br><span class="line">  <span class="type">uint64_t</span> tiles_per_core = <span class="built_in">CeilDiv</span>(tile_num_, core_limit);</span><br><span class="line">  block_dim_ = <span class="built_in">CeilDiv</span>(tile_num_, tiles_per_core);</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 限制最大核心数</span></span><br><span class="line">  block_dim_ = std::<span class="built_in">min</span>(block_dim_, core_limit);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="9-2-内存对齐"><a href="#9-2-内存对齐" class="headerlink" title="9.2 内存对齐"></a>9.2 内存对齐</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 计算对齐后的Tile大小</span></span><br><span class="line"><span class="function"><span class="type">uint64_t</span> <span class="title">AlignTileSize</span><span class="params">(<span class="type">uint64_t</span> raw_size, DataType type)</span> </span>&#123;</span><br><span class="line">  <span class="comment">// 32字节对齐</span></span><br><span class="line">  <span class="type">uint64_t</span> align = <span class="number">32</span> / ITEM_SIZE[type];</span><br><span class="line">  <span class="keyword">return</span> (raw_size + align - <span class="number">1</span>) &amp; ~(align - <span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="9-3-Bank冲突避免"><a href="#9-3-Bank冲突避免" class="headerlink" title="9.3 Bank冲突避免"></a>9.3 Bank冲突避免</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// UB Bank分配</span></span><br><span class="line"><span class="function"><span class="type">uint64_t</span> <span class="title">AllocXBufBank</span><span class="params">(<span class="type">uint64_t</span> size)</span> </span>&#123;</span><br><span class="line">  <span class="comment">// 轮询分配到不同Bank</span></span><br><span class="line">  <span class="type">static</span> <span class="type">uint64_t</span> bank = <span class="number">0</span>;</span><br><span class="line">  <span class="type">uint64_t</span> offset = bank * BANK_SIZE;</span><br><span class="line">  bank = (bank + <span class="number">1</span>) % NUM_BANKS;</span><br><span class="line">  <span class="keyword">return</span> offset;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="十、总结"><a href="#十、总结" class="headerlink" title="十、总结"></a>十、总结</h2><p>本文详细解析了DVM AIV核虚拟机的实现：</p>
+<ol>
+<li><strong>执行架构</strong>：Host侧编译 → Device侧解释执行</li>
+<li><strong>入口函数</strong>：Vector、Reduce、Cube三种入口</li>
+<li><strong>指令执行</strong>：Load、Store、Binary、Unary、Reduce等</li>
+<li><strong>内存管理</strong>：UB布局、内存复用、双缓冲</li>
+<li><strong>Post-Execution</strong>：流水线隐藏解释开销</li>
+<li><strong>SIMD映射</strong>：字节码到Ascend指令的映射</li>
+<li><strong>性能优化</strong>：多核并行、内存对齐、Bank冲突避免</li>
+</ol>
+<p>DVM虚拟机是算子执行的核心，其高效的解释执行机制是DVM实现微秒级编译的关键。</p>
+<hr>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="../src/vm_aiv.h">vm_aiv.h</a></li>
+<li><a href="../src/vm_aiv.cce">vm_aiv.cce</a></li>
+<li><a href="../src/isa.h">isa.h</a></li>
+<li><a href="../src/code.h">code.h</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/myblog/2026/05/19/08_DVM%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%9ATiling%E7%AD%96%E7%95%A5%E4%B8%8E%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" rel="prev" title="DVM性能优化：Tiling策略与内存管理">
+                  <i class="fa fa-angle-left"></i> DVM性能优化：Tiling策略与内存管理
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/myblog/2026/05/19/06_DVM%E5%AD%97%E8%8A%82%E7%A0%81%E7%94%9F%E6%88%90%EF%BC%9A%E6%8C%87%E4%BB%A4%E7%BC%96%E7%A0%81%E4%B8%8E%E7%94%9F%E6%88%90/" rel="next" title="DVM字节码生成：指令编码与生成">
+                  DVM字节码生成：指令编码与生成 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2025 – 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">chujinjin</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

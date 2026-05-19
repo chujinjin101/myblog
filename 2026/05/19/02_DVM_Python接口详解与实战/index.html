@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/myblog/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/myblog/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/myblog/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/myblog/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/myblog/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"chujinjin101.github.io","root":"/myblog/","images":"/myblog/images","scheme":"Pisces","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/myblog/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/myblog/js/config.js" defer></script>
+
+    <meta name="description" content="DVM Python接口详解与实战前言在上一篇《DVM快速入门：从Hello World到自定义算子》中，我们初步体验了DVM的基本使用方式。本文将深入剖析DVM的Python接口实现原理，详细介绍各个API的使用方法，并通过实战案例帮助你掌握DVM Python接口的高级用法。  一、Python接口架构1.1 整体架构DVM的Python接口采用分层设计： 12345678910111213┌">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DVM Python接口详解与实战">
+<meta property="og:url" content="https://chujinjin101.github.io/myblog/2026/05/19/02_DVM_Python%E6%8E%A5%E5%8F%A3%E8%AF%A6%E8%A7%A3%E4%B8%8E%E5%AE%9E%E6%88%98/index.html">
+<meta property="og:site_name" content="chu的技术博客">
+<meta property="og:description" content="DVM Python接口详解与实战前言在上一篇《DVM快速入门：从Hello World到自定义算子》中，我们初步体验了DVM的基本使用方式。本文将深入剖析DVM的Python接口实现原理，详细介绍各个API的使用方法，并通过实战案例帮助你掌握DVM Python接口的高级用法。  一、Python接口架构1.1 整体架构DVM的Python接口采用分层设计： 12345678910111213┌">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-05-19T08:33:04.000Z">
+<meta property="article:modified_time" content="2026-05-19T11:58:27.503Z">
+<meta property="article:author" content="chujinjin">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://chujinjin101.github.io/myblog/2026/05/19/02_DVM_Python%E6%8E%A5%E5%8F%A3%E8%AF%A6%E8%A7%A3%E4%B8%8E%E5%AE%9E%E6%88%98/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://chujinjin101.github.io/myblog/2026/05/19/02_DVM_Python%E6%8E%A5%E5%8F%A3%E8%AF%A6%E8%A7%A3%E4%B8%8E%E5%AE%9E%E6%88%98/","path":"2026/05/19/02_DVM_Python接口详解与实战/","title":"DVM Python接口详解与实战"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>DVM Python接口详解与实战 | chu的技术博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/myblog/js/utils.js" defer></script><script src="/myblog/js/motion.js" defer></script><script src="/myblog/js/sidebar.js" defer></script><script src="/myblog/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/myblog/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/myblog/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/myblog/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">chu的技术博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/myblog/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/myblog/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-tags"><a href="/myblog/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#DVM-Python%E6%8E%A5%E5%8F%A3%E8%AF%A6%E8%A7%A3%E4%B8%8E%E5%AE%9E%E6%88%98"><span class="nav-number">1.</span> <span class="nav-text">DVM Python接口详解与实战</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81Python%E6%8E%A5%E5%8F%A3%E6%9E%B6%E6%9E%84"><span class="nav-number">1.2.</span> <span class="nav-text">一、Python接口架构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84"><span class="nav-number">1.2.1.</span> <span class="nav-text">1.1 整体架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-%E6%A0%B8%E5%BF%83%E6%A8%A1%E5%9D%97"><span class="nav-number">1.2.2.</span> <span class="nav-text">1.2 核心模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-%E6%A8%A1%E5%9D%97%E5%88%9D%E5%A7%8B%E5%8C%96%E6%B5%81%E7%A8%8B"><span class="nav-number">1.2.3.</span> <span class="nav-text">1.3 模块初始化流程</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E6%A0%B8%E5%BF%83%E7%B1%BB%E8%AF%A6%E8%A7%A3"><span class="nav-number">1.3.</span> <span class="nav-text">二、核心类详解</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-DataType-%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.3.1.</span> <span class="nav-text">2.1 DataType - 数据类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-NDObject-N%E7%BB%B4%E5%BC%A0%E9%87%8F%E5%AF%B9%E8%B1%A1"><span class="nav-number">1.3.2.</span> <span class="nav-text">2.2 NDObject - N维张量对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-IntArrayRef-%E5%8A%A8%E6%80%81Shape%E5%BC%95%E7%94%A8"><span class="nav-number">1.3.3.</span> <span class="nav-text">2.3 IntArrayRef - 动态Shape引用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-ScalarRef-%E5%8A%A8%E6%80%81%E6%A0%87%E9%87%8F%E5%BC%95%E7%94%A8"><span class="nav-number">1.3.4.</span> <span class="nav-text">2.4 ScalarRef - 动态标量引用</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E3%80%81Kernel%E7%B1%BB%E8%AF%A6%E8%A7%A3"><span class="nav-number">1.4.</span> <span class="nav-text">三、Kernel类详解</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-Kernel%E7%B1%BB%E5%B1%82%E6%AC%A1"><span class="nav-number">1.4.1.</span> <span class="nav-text">3.1 Kernel类层次</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-Kernel%E6%A0%B8%E5%BF%83API"><span class="nav-number">1.4.2.</span> <span class="nav-text">3.2 Kernel核心API</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-1-%E5%86%85%E5%AD%98%E6%93%8D%E4%BD%9C"><span class="nav-number">1.4.2.1.</span> <span class="nav-text">3.2.1 内存操作</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-2-%E4%B8%80%E5%85%83%E6%93%8D%E4%BD%9C"><span class="nav-number">1.4.2.2.</span> <span class="nav-text">3.2.2 一元操作</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-3-%E4%BA%8C%E5%85%83%E6%93%8D%E4%BD%9C"><span class="nav-number">1.4.2.3.</span> <span class="nav-text">3.2.3 二元操作</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-4-Reduce%E6%93%8D%E4%BD%9C"><span class="nav-number">1.4.2.4.</span> <span class="nav-text">3.2.4 Reduce操作</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-5-%E7%9F%A9%E9%98%B5%E4%B9%98%E6%B3%95"><span class="nav-number">1.4.2.5.</span> <span class="nav-text">3.2.5 矩阵乘法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-6-%E5%85%B6%E4%BB%96%E6%93%8D%E4%BD%9C"><span class="nav-number">1.4.2.6.</span> <span class="nav-text">3.2.6 其他操作</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E8%A3%85%E9%A5%B0%E5%99%A8%E6%9C%BA%E5%88%B6%E8%AF%A6%E8%A7%A3"><span class="nav-number">1.5.</span> <span class="nav-text">四、装饰器机制详解</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-dvm-kernel%E8%A3%85%E9%A5%B0%E5%99%A8"><span class="nav-number">1.5.1.</span> <span class="nav-text">4.1 @dvm.kernel装饰器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-JitKernel%E7%B1%BB"><span class="nav-number">1.5.2.</span> <span class="nav-text">4.2 JitKernel类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-%E8%A3%85%E9%A5%B0%E5%99%A8%E4%BD%BF%E7%94%A8%E6%96%B9%E5%BC%8F"><span class="nav-number">1.5.3.</span> <span class="nav-text">4.3 装饰器使用方式</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E7%94%A8%E6%B3%95"><span class="nav-number">1.5.3.1.</span> <span class="nav-text">基本用法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8C%87%E5%AE%9AKernel%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.5.3.2.</span> <span class="nav-text">指定Kernel类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%9D%99%E6%80%81Shape%E4%BC%98%E5%8C%96"><span class="nav-number">1.5.3.3.</span> <span class="nav-text">静态Shape优化</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94%E3%80%81Tester%E6%B5%8B%E8%AF%95%E5%B7%A5%E5%85%B7%E7%B1%BB"><span class="nav-number">1.6.</span> <span class="nav-text">五、Tester测试工具类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8"><span class="nav-number">1.6.1.</span> <span class="nav-text">5.1 基本使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-Tester%E6%A0%B8%E5%BF%83%E6%96%B9%E6%B3%95"><span class="nav-number">1.6.2.</span> <span class="nav-text">5.2 Tester核心方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95"><span class="nav-number">1.6.3.</span> <span class="nav-text">5.3 性能测试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-4-Profiling%E5%88%86%E6%9E%90"><span class="nav-number">1.6.4.</span> <span class="nav-text">5.4 Profiling分析</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD%E3%80%81%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7"><span class="nav-number">1.7.</span> <span class="nav-text">六、高级特性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-Parallel%E5%B9%B6%E8%A1%8C%E6%89%A7%E8%A1%8C"><span class="nav-number">1.7.1.</span> <span class="nav-text">6.1 Parallel并行执行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-Sequence%E9%A1%BA%E5%BA%8F%E6%89%A7%E8%A1%8C"><span class="nav-number">1.7.2.</span> <span class="nav-text">6.2 Sequence顺序执行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-%E9%80%9A%E4%BF%A1%E7%AE%97%E5%AD%90"><span class="nav-number">1.7.3.</span> <span class="nav-text">6.3 通信算子</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-4-%E8%87%AA%E5%AE%9A%E4%B9%89Tiling"><span class="nav-number">1.7.4.</span> <span class="nav-text">6.4 自定义Tiling</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%83%E3%80%81%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7"><span class="nav-number">1.8.</span> <span class="nav-text">七、调试技巧</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#7-1-Dump%E8%AE%A1%E7%AE%97%E5%9B%BE"><span class="nav-number">1.8.1.</span> <span class="nav-text">7.1 Dump计算图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-2-%E5%8F%8D%E6%B1%87%E7%BC%96%E5%AD%97%E8%8A%82%E7%A0%81"><span class="nav-number">1.8.2.</span> <span class="nav-text">7.2 反汇编字节码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-3-Verbose%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.8.3.</span> <span class="nav-text">7.3 Verbose模式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AB%E3%80%81%E5%AE%9E%E6%88%98%E6%A1%88%E4%BE%8B"><span class="nav-number">1.9.</span> <span class="nav-text">八、实战案例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#8-1-LayerNorm%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.9.1.</span> <span class="nav-text">8.1 LayerNorm实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-2-Softmax%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.9.2.</span> <span class="nav-text">8.2 Softmax实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-3-GELU%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.9.3.</span> <span class="nav-text">8.3 GELU实现</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B9%9D%E3%80%81API%E9%80%9F%E6%9F%A5%E8%A1%A8"><span class="nav-number">1.10.</span> <span class="nav-text">九、API速查表</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#9-1-Kernel%E7%B1%BB%E5%9E%8B%E5%B8%B8%E9%87%8F"><span class="nav-number">1.10.1.</span> <span class="nav-text">9.1 Kernel类型常量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-2-Kernel%E6%A0%87%E5%BF%97%E5%B8%B8%E9%87%8F"><span class="nav-number">1.10.2.</span> <span class="nav-text">9.2 Kernel标志常量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-3-%E5%AE%8C%E6%95%B4API%E5%88%97%E8%A1%A8"><span class="nav-number">1.10.3.</span> <span class="nav-text">9.3 完整API列表</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%81%E3%80%81%E6%80%BB%E7%BB%93"><span class="nav-number">1.11.</span> <span class="nav-text">十、总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="nav-number">1.12.</span> <span class="nav-text">参考资料</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="chujinjin"
+      src="/myblog/images/mine.jpg">
+  <p class="site-author-name" itemprop="name">chujinjin</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/myblog/archives/">
+          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/chujinjin101" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;chujinjin101" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:you@example.com" title="Email → mailto:you@example.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>Email</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+        <div class="back-to-top animated" role="button" aria-label="返回顶部">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://chujinjin101.github.io/myblog/2026/05/19/02_DVM_Python%E6%8E%A5%E5%8F%A3%E8%AF%A6%E8%A7%A3%E4%B8%8E%E5%AE%9E%E6%88%98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/myblog/images/mine.jpg">
+      <meta itemprop="name" content="chujinjin">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="chu的技术博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="DVM Python接口详解与实战 | chu的技术博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          DVM Python接口详解与实战
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2026-05-19 16:33:04 / 修改时间：19:58:27" itemprop="dateCreated datePublished" datetime="2026-05-19T16:33:04+08:00">2026-05-19</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="DVM-Python接口详解与实战"><a href="#DVM-Python接口详解与实战" class="headerlink" title="DVM Python接口详解与实战"></a>DVM Python接口详解与实战</h1><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在上一篇《DVM快速入门：从Hello World到自定义算子》中，我们初步体验了DVM的基本使用方式。本文将深入剖析DVM的Python接口实现原理，详细介绍各个API的使用方法，并通过实战案例帮助你掌握DVM Python接口的高级用法。</p>
+<hr>
+<h2 id="一、Python接口架构"><a href="#一、Python接口架构" class="headerlink" title="一、Python接口架构"></a>一、Python接口架构</h2><h3 id="1-1-整体架构"><a href="#1-1-整体架构" class="headerlink" title="1.1 整体架构"></a>1.1 整体架构</h3><p>DVM的Python接口采用分层设计：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">┌─────────────────────────────────────────────────────────┐</span><br><span class="line">│                    用户代码层                             │</span><br><span class="line">│  @dvm.kernel 装饰器、JitKernel、Tester                   │</span><br><span class="line">├─────────────────────────────────────────────────────────┤</span><br><span class="line">│                    Python封装层                          │</span><br><span class="line">│  __init__.py, jit.py, tester.py                         │</span><br><span class="line">├─────────────────────────────────────────────────────────┤</span><br><span class="line">│                    pybind11绑定层                        │</span><br><span class="line">│  _dvm_py.so, pybind_api.cc                              │</span><br><span class="line">├─────────────────────────────────────────────────────────┤</span><br><span class="line">│                    C++核心层                             │</span><br><span class="line">│  Kernel, NDObject, VKernel                              │</span><br><span class="line">└─────────────────────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-2-核心模块"><a href="#1-2-核心模块" class="headerlink" title="1.2 核心模块"></a>1.2 核心模块</h3><table>
+<thead>
+<tr>
+<th>模块</th>
+<th>文件</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>dvm</td>
+<td><strong>init</strong>.py</td>
+<td>模块入口，导出公共API</td>
+</tr>
+<tr>
+<td>dvm.jit</td>
+<td>jit.py</td>
+<td>JIT编译装饰器实现</td>
+</tr>
+<tr>
+<td>dvm.tester</td>
+<td>tester.py</td>
+<td>测试工具类</td>
+</tr>
+<tr>
+<td>dvm._dvm_py</td>
+<td>_dvm_py.so</td>
+<td>pybind11绑定库</td>
+</tr>
+</tbody></table>
+<h3 id="1-3-模块初始化流程"><a href="#1-3-模块初始化流程" class="headerlink" title="1.3 模块初始化流程"></a>1.3 模块初始化流程</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># dvm/__init__.py</span></span><br><span class="line"><span class="keyword">from</span> . <span class="keyword">import</span> _dvm_py <span class="keyword">as</span> _core</span><br><span class="line"><span class="keyword">from</span> ._dvm_py <span class="keyword">import</span> DataType, Device, Kernel, PyKernel, NDObject, IntArrayRef, ScalarRef</span><br><span class="line"><span class="keyword">from</span> .jit <span class="keyword">import</span> kernel</span><br><span class="line"></span><br><span class="line"><span class="comment"># 导出数据类型常量</span></span><br><span class="line">bool_ = DataType.<span class="built_in">bool</span></span><br><span class="line">float16 = DataType.float16</span><br><span class="line">bfloat16 = DataType.bfloat16</span><br><span class="line">float32 = DataType.float32</span><br><span class="line">int32 = DataType.int32</span><br><span class="line">int64 = DataType.int64</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="二、核心类详解"><a href="#二、核心类详解" class="headerlink" title="二、核心类详解"></a>二、核心类详解</h2><h3 id="2-1-DataType-数据类型"><a href="#2-1-DataType-数据类型" class="headerlink" title="2.1 DataType - 数据类型"></a>2.1 DataType - 数据类型</h3><p>DVM支持以下数据类型：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> dvm</span><br><span class="line"></span><br><span class="line"><span class="comment"># 数据类型常量</span></span><br><span class="line">dvm.bool_      <span class="comment"># 布尔类型</span></span><br><span class="line">dvm.float16    <span class="comment"># 半精度浮点 (FP16)</span></span><br><span class="line">dvm.bfloat16   <span class="comment"># Brain Float16 (BF16)</span></span><br><span class="line">dvm.float32    <span class="comment"># 单精度浮点 (FP32)</span></span><br><span class="line">dvm.int32      <span class="comment"># 32位整数</span></span><br><span class="line">dvm.int64      <span class="comment"># 64位整数</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>类型特性</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>字节数</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>float16</td>
+<td>2</td>
+<td>推理加速、显存优化</td>
+</tr>
+<tr>
+<td>bfloat16</td>
+<td>2</td>
+<td>训练场景、数值稳定性</td>
+</tr>
+<tr>
+<td>float32</td>
+<td>4</td>
+<td>高精度计算、Reduce操作</td>
+</tr>
+<tr>
+<td>int32</td>
+<td>4</td>
+<td>索引、整数运算</td>
+</tr>
+</tbody></table>
+<h3 id="2-2-NDObject-N维张量对象"><a href="#2-2-NDObject-N维张量对象" class="headerlink" title="2.2 NDObject - N维张量对象"></a>2.2 NDObject - N维张量对象</h3><p><code>NDObject</code>是DVM中表示张量的核心类：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">NDObject</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">shape</span>(<span class="params">self</span>) -&gt; <span class="type">Tuple</span>[<span class="built_in">int</span>, ...]:</span><br><span class="line">        <span class="string">&quot;&quot;&quot;获取张量形状&quot;&quot;&quot;</span></span><br><span class="line">        <span class="keyword">pass</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">dtype</span>(<span class="params">self</span>) -&gt; DataType:</span><br><span class="line">        <span class="string">&quot;&quot;&quot;获取数据类型&quot;&quot;&quot;</span></span><br><span class="line">        <span class="keyword">pass</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>使用示例</strong>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> dvm</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"></span><br><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">example</span>(<span class="params">k, x</span>):</span><br><span class="line">    a = k.load(x, dvm.float32)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;Shape: <span class="subst">&#123;a.shape()&#125;</span>&quot;</span>)  <span class="comment"># 输出形状</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;DType: <span class="subst">&#123;a.dtype()&#125;</span>&quot;</span>)  <span class="comment"># 输出类型</span></span><br><span class="line">    <span class="keyword">return</span> k.store(a)</span><br><span class="line"></span><br><span class="line">x = np.random.randn(<span class="number">32</span>, <span class="number">64</span>).astype(np.float32)</span><br><span class="line">result = example(x)</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-3-IntArrayRef-动态Shape引用"><a href="#2-3-IntArrayRef-动态Shape引用" class="headerlink" title="2.3 IntArrayRef - 动态Shape引用"></a>2.3 IntArrayRef - 动态Shape引用</h3><p><code>IntArrayRef</code>用于支持动态Shape场景：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">IntArrayRef</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, shape: <span class="type">Sequence</span>[<span class="built_in">int</span>] = <span class="literal">None</span></span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;创建Shape引用&quot;&quot;&quot;</span></span><br><span class="line">        <span class="keyword">pass</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">shape</span>(<span class="params">self</span>) -&gt; <span class="type">Tuple</span>[<span class="built_in">int</span>, ...]:</span><br><span class="line">        <span class="string">&quot;&quot;&quot;获取当前Shape&quot;&quot;&quot;</span></span><br><span class="line">        <span class="keyword">pass</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">update</span>(<span class="params">self, shape: <span class="type">Sequence</span>[<span class="built_in">int</span>]</span>) -&gt; <span class="literal">None</span>:</span><br><span class="line">        <span class="string">&quot;&quot;&quot;更新Shape&quot;&quot;&quot;</span></span><br><span class="line">        <span class="keyword">pass</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>动态Shape示例</strong>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> dvm</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建动态Shape引用</span></span><br><span class="line">shape_ref = dvm.IntArrayRef()</span><br><span class="line"></span><br><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">dynamic_kernel</span>(<span class="params">k</span>):</span><br><span class="line">    x = k.load(shape_ref, dvm.float32)</span><br><span class="line">    y = k.add(x, <span class="number">1.0</span>)</span><br><span class="line">    <span class="keyword">return</span> k.store(y)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 第一次执行：Shape = [32, 64]</span></span><br><span class="line">shape_ref.update([<span class="number">32</span>, <span class="number">64</span>])</span><br><span class="line">result1 = dynamic_kernel(np.ones([<span class="number">32</span>, <span class="number">64</span>], dtype=np.float32))</span><br><span class="line"></span><br><span class="line"><span class="comment"># 第二次执行：Shape = [128, 256]</span></span><br><span class="line">shape_ref.update([<span class="number">128</span>, <span class="number">256</span>])</span><br><span class="line">result2 = dynamic_kernel(np.ones([<span class="number">128</span>, <span class="number">256</span>], dtype=np.float32))</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-4-ScalarRef-动态标量引用"><a href="#2-4-ScalarRef-动态标量引用" class="headerlink" title="2.4 ScalarRef - 动态标量引用"></a>2.4 ScalarRef - 动态标量引用</h3><p><code>ScalarRef</code>用于支持动态标量参数：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">ScalarRef</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">update</span>(<span class="params">self, value: <span class="type">Union</span>[<span class="built_in">int</span>, <span class="built_in">float</span>]</span>) -&gt; <span class="literal">None</span>:</span><br><span class="line">        <span class="string">&quot;&quot;&quot;更新标量值&quot;&quot;&quot;</span></span><br><span class="line">        <span class="keyword">pass</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>使用示例</strong>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> dvm</span><br><span class="line"></span><br><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scale_kernel</span>(<span class="params">k, x, scale</span>):</span><br><span class="line">    scale_ref = k.scalar(dvm.float32)</span><br><span class="line">    a = k.load(x, dvm.float32)</span><br><span class="line">    b = k.mul(a, scale_ref)</span><br><span class="line">    <span class="keyword">return</span> k.store(b)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 动态更新scale值</span></span><br><span class="line">scale = dvm.ScalarRef()</span><br><span class="line">scale.update(<span class="number">0.5</span>)</span><br><span class="line">result = scale_kernel(x, scale)</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="三、Kernel类详解"><a href="#三、Kernel类详解" class="headerlink" title="三、Kernel类详解"></a>三、Kernel类详解</h2><h3 id="3-1-Kernel类层次"><a href="#3-1-Kernel类层次" class="headerlink" title="3.1 Kernel类层次"></a>3.1 Kernel类层次</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Kernel (基类 - pybind11绑定)</span><br><span class="line">├── PyKernel (运行时Kernel)</span><br><span class="line">│   └── JitKernel (JIT编译Kernel)</span><br><span class="line">└── Tester (测试工具类)</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-2-Kernel核心API"><a href="#3-2-Kernel核心API" class="headerlink" title="3.2 Kernel核心API"></a>3.2 Kernel核心API</h3><h4 id="3-2-1-内存操作"><a href="#3-2-1-内存操作" class="headerlink" title="3.2.1 内存操作"></a>3.2.1 内存操作</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 加载张量</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">load</span>(<span class="params">self, shape: ShapeLike, <span class="built_in">type</span>: DataType</span>) -&gt; NDObject:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;从全局内存加载张量&quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 非连续张量加载</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">view_load</span>(<span class="params">self, shape: ShapeLike, stride: ShapeLike, <span class="built_in">type</span>: DataType</span>) -&gt; NDObject:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;加载非连续内存张量&quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 存储张量</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">store</span>(<span class="params">self, obj: NDObject, <span class="built_in">type</span>: DataType = <span class="literal">None</span></span>) -&gt; NDObject:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;存储结果到全局内存&quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">pass</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="3-2-2-一元操作"><a href="#3-2-2-一元操作" class="headerlink" title="3.2.2 一元操作"></a>3.2.2 一元操作</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 数学函数</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">sqrt</span>(<span class="params">self, <span class="built_in">input</span>: NDObject</span>) -&gt; NDObject:    <span class="comment"># 平方根</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">abs</span>(<span class="params">self, <span class="built_in">input</span>: NDObject</span>) -&gt; NDObject:     <span class="comment"># 绝对值</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">log</span>(<span class="params">self, <span class="built_in">input</span>: NDObject</span>) -&gt; NDObject:     <span class="comment"># 自然对数</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">exp</span>(<span class="params">self, <span class="built_in">input</span>: NDObject</span>) -&gt; NDObject:     <span class="comment"># 自然指数</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">reciprocal</span>(<span class="params">self, <span class="built_in">input</span>: NDObject</span>) -&gt; NDObject:  <span class="comment"># 倒数</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 取整函数</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">round</span>(<span class="params">self, <span class="built_in">input</span>: NDObject</span>) -&gt; NDObject:   <span class="comment"># 四舍五入</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">floor</span>(<span class="params">self, <span class="built_in">input</span>: NDObject</span>) -&gt; NDObject:   <span class="comment"># 向下取整</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">ceil</span>(<span class="params">self, <span class="built_in">input</span>: NDObject</span>) -&gt; NDObject:    <span class="comment"># 向上取整</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">trunc</span>(<span class="params">self, <span class="built_in">input</span>: NDObject</span>) -&gt; NDObject:   <span class="comment"># 截断</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 逻辑函数</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">logical_not</span>(<span class="params">self, <span class="built_in">input</span>: NDObject</span>) -&gt; NDObject:  <span class="comment"># 逻辑非</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">isfinite</span>(<span class="params">self, <span class="built_in">input</span>: NDObject</span>) -&gt; NDObject:     <span class="comment"># 有限判断</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="3-2-3-二元操作"><a href="#3-2-3-二元操作" class="headerlink" title="3.2.3 二元操作"></a>3.2.3 二元操作</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 算术运算</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">add</span>(<span class="params">self, lhs, rhs</span>) -&gt; NDObject:     <span class="comment"># 加法</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">sub</span>(<span class="params">self, lhs, rhs</span>) -&gt; NDObject:     <span class="comment"># 减法</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">mul</span>(<span class="params">self, lhs, rhs</span>) -&gt; NDObject:     <span class="comment"># 乘法</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">div</span>(<span class="params">self, lhs, rhs</span>) -&gt; NDObject:     <span class="comment"># 除法</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">pow</span>(<span class="params">self, lhs, rhs</span>) -&gt; NDObject:     <span class="comment"># 幂运算</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 比较运算</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">equal</span>(<span class="params">self, lhs, rhs</span>) -&gt; NDObject:        <span class="comment"># 等于</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">not_equal</span>(<span class="params">self, lhs, rhs</span>) -&gt; NDObject:    <span class="comment"># 不等于</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">greater</span>(<span class="params">self, lhs, rhs</span>) -&gt; NDObject:      <span class="comment"># 大于</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">greater_equal</span>(<span class="params">self, lhs, rhs</span>) -&gt; NDObject: <span class="comment"># 大于等于</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">less</span>(<span class="params">self, lhs, rhs</span>) -&gt; NDObject:         <span class="comment"># 小于</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">less_equal</span>(<span class="params">self, lhs, rhs</span>) -&gt; NDObject:   <span class="comment"># 小于等于</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 极值运算</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">maximum</span>(<span class="params">self, lhs, rhs</span>) -&gt; NDObject:  <span class="comment"># 最大值</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">minimum</span>(<span class="params">self, lhs, rhs</span>) -&gt; NDObject:  <span class="comment"># 最小值</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 逻辑运算</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">logical_and</span>(<span class="params">self, lhs, rhs</span>) -&gt; NDObject:  <span class="comment"># 逻辑与</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">logical_or</span>(<span class="params">self, lhs, rhs</span>) -&gt; NDObject:   <span class="comment"># 逻辑或</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>参数类型支持</strong>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 张量与张量</span></span><br><span class="line">c = k.add(a, b)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 张量与标量</span></span><br><span class="line">c = k.add(a, <span class="number">1.0</span>)</span><br><span class="line">c = k.add(a, <span class="number">2</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 标量与张量</span></span><br><span class="line">c = k.mul(<span class="number">0.5</span>, a)</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-2-4-Reduce操作"><a href="#3-2-4-Reduce操作" class="headerlink" title="3.2.4 Reduce操作"></a>3.2.4 Reduce操作</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">sum</span>(<span class="params">self, <span class="built_in">input</span>: NDObject, dims: <span class="type">Sequence</span>[<span class="built_in">int</span>], keepdims: <span class="built_in">bool</span> = <span class="literal">False</span></span>) -&gt; NDObject:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;求和归约&quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">max</span>(<span class="params">self, <span class="built_in">input</span>: NDObject, dims: <span class="type">Sequence</span>[<span class="built_in">int</span>], keepdims: <span class="built_in">bool</span> = <span class="literal">False</span></span>) -&gt; NDObject:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;最大值归约&quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">min</span>(<span class="params">self, <span class="built_in">input</span>: NDObject, dims: <span class="type">Sequence</span>[<span class="built_in">int</span>], keepdims: <span class="built_in">bool</span> = <span class="literal">False</span></span>) -&gt; NDObject:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;最小值归约&quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">pass</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>使用示例</strong>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> dvm</span><br><span class="line"></span><br><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">reduce_example</span>(<span class="params">k, x</span>):</span><br><span class="line">    a = k.load(x, dvm.float32)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 对第0维求和，不保持维度</span></span><br><span class="line">    sum_0 = k.<span class="built_in">sum</span>(a, (<span class="number">0</span>,), <span class="literal">False</span>)  <span class="comment"># Shape: [d1, d2, ...]</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 对第0、1维求最大值，保持维度</span></span><br><span class="line">    max_01 = k.<span class="built_in">max</span>(a, (<span class="number">0</span>, <span class="number">1</span>), <span class="literal">True</span>)  <span class="comment"># Shape: [1, 1, d2, ...]</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 全局求和</span></span><br><span class="line">    sum_all = k.<span class="built_in">sum</span>(a, <span class="built_in">tuple</span>(<span class="built_in">range</span>(<span class="built_in">len</span>(a.shape()))), <span class="literal">False</span>)  <span class="comment"># Shape: []</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> k.store(sum_all)</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-2-5-矩阵乘法"><a href="#3-2-5-矩阵乘法" class="headerlink" title="3.2.5 矩阵乘法"></a>3.2.5 矩阵乘法</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">matmul</span>(<span class="params"></span></span><br><span class="line"><span class="params">    self,</span></span><br><span class="line"><span class="params">    lhs: NDObject,</span></span><br><span class="line"><span class="params">    rhs: NDObject,</span></span><br><span class="line"><span class="params">    trans_a: <span class="built_in">bool</span>,</span></span><br><span class="line"><span class="params">    trans_b: <span class="built_in">bool</span>,</span></span><br><span class="line"><span class="params">    bias: <span class="type">Optional</span>[NDObject] = <span class="literal">None</span></span></span><br><span class="line"><span class="params"></span>) -&gt; NDObject:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;矩阵乘法&quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">pass</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>参数说明</strong>：</p>
+<ul>
+<li><code>lhs</code>: 左矩阵</li>
+<li><code>rhs</code>: 右矩阵</li>
+<li><code>trans_a</code>: 是否转置左矩阵</li>
+<li><code>trans_b</code>: 是否转置右矩阵</li>
+<li><code>bias</code>: 可选的偏置向量</li>
+</ul>
+<p><strong>使用示例</strong>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> dvm</span><br><span class="line"></span><br><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">matmul_example</span>(<span class="params">k, a, b, bias</span>):</span><br><span class="line">    a = k.load(a, dvm.float16)</span><br><span class="line">    b = k.load(b, dvm.float16)</span><br><span class="line">    bias = k.load(bias, dvm.float32)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># C = A @ B^T + bias</span></span><br><span class="line">    c = k.matmul(a, b, <span class="literal">False</span>, <span class="literal">True</span>, bias)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> k.store(c)</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-2-6-其他操作"><a href="#3-2-6-其他操作" class="headerlink" title="3.2.6 其他操作"></a>3.2.6 其他操作</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 类型转换</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">cast</span>(<span class="params">self, <span class="built_in">input</span>: NDObject, <span class="built_in">type</span>: DataType</span>) -&gt; NDObject:</span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 形状操作</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">reshape</span>(<span class="params">self, <span class="built_in">input</span>: NDObject, shape: ShapeLike</span>) -&gt; NDObject:</span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 广播</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">broadcast</span>(<span class="params">self, <span class="built_in">input</span>: NDObject, shape: ShapeLike</span>) -&gt; NDObject:</span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 条件选择</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">select</span>(<span class="params">self, cond: NDObject, lhs: NDObject, rhs: NDObject</span>) -&gt; NDObject:</span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 拷贝</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">copy</span>(<span class="params">self, <span class="built_in">input</span>: NDObject</span>) -&gt; NDObject:</span><br><span class="line">    <span class="keyword">pass</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="四、装饰器机制详解"><a href="#四、装饰器机制详解" class="headerlink" title="四、装饰器机制详解"></a>四、装饰器机制详解</h2><h3 id="4-1-dvm-kernel装饰器"><a href="#4-1-dvm-kernel装饰器" class="headerlink" title="4.1 @dvm.kernel装饰器"></a>4.1 @dvm.kernel装饰器</h3><p><code>@dvm.kernel</code>是DVM最核心的装饰器，它将普通Python函数转换为可执行的Kernel：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># jit.py</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">kernel</span>(<span class="params">ktype=<span class="string">&quot;split&quot;</span>, dynamic=<span class="literal">True</span></span>):</span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">callable</span>(ktype):</span><br><span class="line">        func = ktype</span><br><span class="line">        kobj = JitKernel(<span class="string">&quot;split&quot;</span>, <span class="literal">True</span>)</span><br><span class="line">        kobj.build(func)</span><br><span class="line">        <span class="keyword">return</span> kobj</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">decorate</span>(<span class="params">func</span>):</span><br><span class="line">        kobj = JitKernel(ktype, dynamic)</span><br><span class="line">        kobj.build(func)</span><br><span class="line">        <span class="keyword">return</span> kobj</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> decorate</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-2-JitKernel类"><a href="#4-2-JitKernel类" class="headerlink" title="4.2 JitKernel类"></a>4.2 JitKernel类</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">JitKernel</span>(<span class="title class_ inherited__">Kernel</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, ker_type, dynamic</span>):</span><br><span class="line">        <span class="comment"># 解析Kernel类型和动态标志</span></span><br><span class="line">        <span class="keyword">if</span> dynamic:</span><br><span class="line">            ker_type += <span class="string">&quot;,dyn&quot;</span> <span class="keyword">if</span> <span class="string">&quot;:&quot;</span> <span class="keyword">in</span> ker_type <span class="keyword">else</span> <span class="string">&quot;:dyn&quot;</span></span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 获取设备ID</span></span><br><span class="line">        dev_conf = os.getenv(<span class="string">&quot;DEVICE_ID&quot;</span>)</span><br><span class="line">        dev_id = <span class="built_in">int</span>(dev_conf) <span class="keyword">if</span> dev_conf <span class="keyword">else</span> <span class="number">0</span></span><br><span class="line">        </span><br><span class="line">        Kernel.__init__(<span class="variable language_">self</span>, ker_type, <span class="string">&quot;dev&quot;</span>, dev_id)</span><br><span class="line">        <span class="variable language_">self</span>.inputs = <span class="literal">None</span></span><br><span class="line">        <span class="variable language_">self</span>.outputs = <span class="literal">None</span></span><br><span class="line">        <span class="variable language_">self</span>.dynamic = dynamic</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">build</span>(<span class="params">self, func</span>):</span><br><span class="line">        <span class="comment"># 解析函数参数数量</span></span><br><span class="line">        arg_cnt = func.__code__.co_argcount - <span class="number">1</span></span><br><span class="line">        args = [i <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(arg_cnt)]</span><br><span class="line">        <span class="variable language_">self</span>.inputs = [<span class="literal">None</span>] * arg_cnt</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 执行构图函数</span></span><br><span class="line">        <span class="variable language_">self</span>.outputs = func(<span class="variable language_">self</span>, *args)</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 静态Shape提前编译</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> <span class="variable language_">self</span>.dynamic:</span><br><span class="line">            <span class="variable language_">self</span>.codegen(<span class="literal">None</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__call__</span>(<span class="params">self, *args</span>):</span><br><span class="line">        <span class="comment"># 绑定输入数据</span></span><br><span class="line">        <span class="keyword">for</span> inp, arg <span class="keyword">in</span> <span class="built_in">zip</span>(<span class="variable language_">self</span>.inputs, args):</span><br><span class="line">            Kernel.<span class="built_in">input</span>(<span class="variable language_">self</span>, inp, arg)</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 动态Shape需要重新编译</span></span><br><span class="line">        <span class="keyword">if</span> <span class="variable language_">self</span>.dynamic:</span><br><span class="line">            <span class="variable language_">self</span>.codegen(<span class="literal">None</span>)</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 执行Kernel</span></span><br><span class="line">        <span class="variable language_">self</span>.run()</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 返回输出</span></span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">isinstance</span>(<span class="variable language_">self</span>.outputs, (<span class="built_in">list</span>, <span class="built_in">tuple</span>)):</span><br><span class="line">            <span class="keyword">return</span> [<span class="variable language_">self</span>.output(x) <span class="keyword">for</span> x <span class="keyword">in</span> <span class="variable language_">self</span>.outputs]</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            <span class="keyword">return</span> <span class="variable language_">self</span>.output(<span class="variable language_">self</span>.outputs)</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-3-装饰器使用方式"><a href="#4-3-装饰器使用方式" class="headerlink" title="4.3 装饰器使用方式"></a>4.3 装饰器使用方式</h3><h4 id="基本用法"><a href="#基本用法" class="headerlink" title="基本用法"></a>基本用法</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> dvm</span><br><span class="line"></span><br><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">my_add</span>(<span class="params">k, x, y</span>):</span><br><span class="line">    a = k.load(x, dvm.float32)</span><br><span class="line">    b = k.load(y, dvm.float32)</span><br><span class="line">    c = k.add(a, b)</span><br><span class="line">    <span class="keyword">return</span> k.store(c)</span><br></pre></td></tr></table></figure>
+
+<h4 id="指定Kernel类型"><a href="#指定Kernel类型" class="headerlink" title="指定Kernel类型"></a>指定Kernel类型</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Vector Kernel</span></span><br><span class="line"><span class="meta">@dvm.kernel(<span class="params">ktype=<span class="string">&quot;vector&quot;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">vector_op</span>(<span class="params">k, x</span>):</span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Cube Kernel (MatMul)</span></span><br><span class="line"><span class="meta">@dvm.kernel(<span class="params">ktype=<span class="string">&quot;cube&quot;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">matmul_op</span>(<span class="params">k, a, b</span>):</span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Mix Kernel (MatMul + Vector)</span></span><br><span class="line"><span class="meta">@dvm.kernel(<span class="params">ktype=<span class="string">&quot;mix&quot;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">mix_op</span>(<span class="params">k, a, b</span>):</span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Split Kernel (自动拆分)</span></span><br><span class="line"><span class="meta">@dvm.kernel(<span class="params">ktype=<span class="string">&quot;split&quot;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">complex_op</span>(<span class="params">k, x</span>):</span><br><span class="line">    <span class="keyword">pass</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="静态Shape优化"><a href="#静态Shape优化" class="headerlink" title="静态Shape优化"></a>静态Shape优化</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 静态Shape：编译一次，多次执行</span></span><br><span class="line"><span class="meta">@dvm.kernel(<span class="params">dynamic=<span class="literal">False</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">static_kernel</span>(<span class="params">k, x</span>):</span><br><span class="line">    a = k.load(x, dvm.float32)</span><br><span class="line">    <span class="keyword">return</span> k.store(a)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 动态Shape：每次执行重新编译</span></span><br><span class="line"><span class="meta">@dvm.kernel(<span class="params">dynamic=<span class="literal">True</span></span>)  </span><span class="comment"># 默认值</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">dynamic_kernel</span>(<span class="params">k, x</span>):</span><br><span class="line">    a = k.load(x, dvm.float32)</span><br><span class="line">    <span class="keyword">return</span> k.store(a)</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="五、Tester测试工具类"><a href="#五、Tester测试工具类" class="headerlink" title="五、Tester测试工具类"></a>五、Tester测试工具类</h2><p><code>Tester</code>是DVM提供的测试工具类，简化了算子开发和验证流程。</p>
+<h3 id="5-1-基本使用"><a href="#5-1-基本使用" class="headerlink" title="5.1 基本使用"></a>5.1 基本使用</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> dvm.tester <span class="keyword">import</span> Tester</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">test_add</span>():</span><br><span class="line">    t = Tester(<span class="string">&quot;vector&quot;</span>)  <span class="comment"># 创建Vector Kernel测试器</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 准备输入数据</span></span><br><span class="line">    x = np.random.randn(<span class="number">32</span>, <span class="number">64</span>).astype(np.float32)</span><br><span class="line">    y = np.random.randn(<span class="number">32</span>, <span class="number">64</span>).astype(np.float32)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 构图</span></span><br><span class="line">    a = t.load(x)</span><br><span class="line">    b = t.load(y)</span><br><span class="line">    c = t.add(a, b)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 存储并验证</span></span><br><span class="line">    t.store_expect(c, x + y)  <span class="comment"># 自动验证结果</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 执行并检查</span></span><br><span class="line">    <span class="keyword">assert</span> t.run_check()</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-2-Tester核心方法"><a href="#5-2-Tester核心方法" class="headerlink" title="5.2 Tester核心方法"></a>5.2 Tester核心方法</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Tester</span>(<span class="title class_ inherited__">Kernel</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, ker_type=<span class="string">&quot;&quot;</span>, use_pass_opt=<span class="literal">False</span>, run_mode=<span class="string">&quot;dev&quot;</span>, comm=<span class="literal">None</span></span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;初始化测试器&quot;&quot;&quot;</span></span><br><span class="line">        <span class="keyword">pass</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">load</span>(<span class="params">self, shape_arr, dtype=<span class="literal">None</span></span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;加载数组并自动处理类型转换&quot;&quot;&quot;</span></span><br><span class="line">        <span class="keyword">pass</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">store_expect</span>(<span class="params">self, x, e, eps=<span class="literal">None</span></span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;存储并记录期望结果&quot;&quot;&quot;</span></span><br><span class="line">        <span class="keyword">pass</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">run_check</span>(<span class="params">self, verbose=<span class="literal">False</span></span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;执行并验证结果&quot;&quot;&quot;</span></span><br><span class="line">        <span class="keyword">pass</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">run_perf</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;性能测试&quot;&quot;&quot;</span></span><br><span class="line">        <span class="keyword">pass</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">run_msprof</span>(<span class="params">self, path, test_num=<span class="number">10</span></span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;Profiling分析&quot;&quot;&quot;</span></span><br><span class="line">        <span class="keyword">pass</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="5-3-性能测试"><a href="#5-3-性能测试" class="headerlink" title="5.3 性能测试"></a>5.3 性能测试</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> dvm.tester <span class="keyword">import</span> Tester</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">perf_test</span>():</span><br><span class="line">    t = Tester(<span class="string">&quot;vector&quot;</span>)</span><br><span class="line">    </span><br><span class="line">    x = np.random.randn(<span class="number">1024</span>, <span class="number">1024</span>).astype(np.float32)</span><br><span class="line">    y = np.random.randn(<span class="number">1024</span>, <span class="number">1024</span>).astype(np.float32)</span><br><span class="line">    </span><br><span class="line">    a = t.load(x)</span><br><span class="line">    b = t.load(y)</span><br><span class="line">    c = t.add(a, b)</span><br><span class="line">    t.store(c)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 运行性能测试</span></span><br><span class="line">    perf = t.run_perf()</span><br><span class="line">    <span class="built_in">print</span>(perf)</span><br><span class="line">    <span class="comment"># 输出: Kernel Time Summary: perf_test</span></span><br><span class="line">    <span class="comment">#       min (us)       max (us)       mean (us)      </span></span><br><span class="line">    <span class="comment">#       12.3456        15.6789        13.4567</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="5-4-Profiling分析"><a href="#5-4-Profiling分析" class="headerlink" title="5.4 Profiling分析"></a>5.4 Profiling分析</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">msprof_test</span>():</span><br><span class="line">    t = Tester(<span class="string">&quot;vector&quot;</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># ... 构图 ...</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 生成Profiling数据</span></span><br><span class="line">    result = t.run_msprof(<span class="string">&quot;./profiling_output&quot;</span>, test_num=<span class="number">100</span>)</span><br><span class="line">    <span class="built_in">print</span>(result)</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="六、高级特性"><a href="#六、高级特性" class="headerlink" title="六、高级特性"></a>六、高级特性</h2><h3 id="6-1-Parallel并行执行"><a href="#6-1-Parallel并行执行" class="headerlink" title="6.1 Parallel并行执行"></a>6.1 Parallel并行执行</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> dvm</span><br><span class="line"></span><br><span class="line"><span class="meta">@dvm.kernel(<span class="params">ktype=<span class="string">&quot;parallel&quot;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">parallel_example</span>(<span class="params">k, a, b, c, d</span>):</span><br><span class="line">    <span class="comment"># 第一个并行分支：Vector计算</span></span><br><span class="line">    k.parallel_add(dvm.Kernel.K_VEC)</span><br><span class="line">    a = k.load(a, dvm.float32)</span><br><span class="line">    b = k.load(b, dvm.float32)</span><br><span class="line">    ab = k.add(a, b)</span><br><span class="line">    out1 = k.store(ab)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 第二个并行分支：MatMul计算</span></span><br><span class="line">    k.parallel_add(dvm.Kernel.K_CUBE)</span><br><span class="line">    c = k.load(c, dvm.float16)</span><br><span class="line">    d = k.load(d, dvm.float16)</span><br><span class="line">    cd = k.matmul(c, d, <span class="literal">False</span>, <span class="literal">False</span>)</span><br><span class="line">    out2 = k.store(cd)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> [out1, out2]</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-2-Sequence顺序执行"><a href="#6-2-Sequence顺序执行" class="headerlink" title="6.2 Sequence顺序执行"></a>6.2 Sequence顺序执行</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@dvm.kernel(<span class="params">ktype=<span class="string">&quot;seq&quot;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">sequence_example</span>(<span class="params">k, a, b</span>):</span><br><span class="line">    <span class="comment"># 第一个子Kernel</span></span><br><span class="line">    k.seq_add(dvm.Kernel.K_VEC)</span><br><span class="line">    a = k.load(a, dvm.float32)</span><br><span class="line">    a_cast = k.cast(a, dvm.float16)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 第二个子Kernel</span></span><br><span class="line">    k.seq_add(dvm.Kernel.K_MIX)</span><br><span class="line">    b = k.load(b, dvm.float16)</span><br><span class="line">    c = k.matmul(a_cast, b, <span class="literal">False</span>, <span class="literal">False</span>)</span><br><span class="line">    d = k.add(c, <span class="number">1.0</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> k.store(d)</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-3-通信算子"><a href="#6-3-通信算子" class="headerlink" title="6.3 通信算子"></a>6.3 通信算子</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> dvm.tester <span class="keyword">import</span> Tester, CommScope</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">test_allreduce</span>():</span><br><span class="line">    <span class="comment"># 创建多进程通信域</span></span><br><span class="line">    <span class="keyword">with</span> CommScope(<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>):  <span class="comment"># 使用4个设备</span></span><br><span class="line">        t = Tester(comm=...)</span><br><span class="line">        </span><br><span class="line">        x = np.random.randn(<span class="number">1024</span>).astype(np.float32)</span><br><span class="line">        a = t.load(x)</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># AllReduce求和</span></span><br><span class="line">        b = t.allreduce(<span class="string">&quot;sum&quot;</span>, a)</span><br><span class="line">        </span><br><span class="line">        t.store_expect(b, x * <span class="number">4</span>)  <span class="comment"># 4个进程求和</span></span><br><span class="line">        <span class="keyword">assert</span> t.run_check()</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-4-自定义Tiling"><a href="#6-4-自定义Tiling" class="headerlink" title="6.4 自定义Tiling"></a>6.4 自定义Tiling</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">custom_tiling</span>(<span class="params">k, x</span>):</span><br><span class="line">    a = k.load(x, dvm.float32)</span><br><span class="line">    b = k.add(a, <span class="number">1.0</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 自定义Tiling策略</span></span><br><span class="line">    k.tile(start=<span class="number">0</span>, end=<span class="number">2</span>, num=<span class="number">128</span>, factor=<span class="number">0</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> k.store(b)</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="七、调试技巧"><a href="#七、调试技巧" class="headerlink" title="七、调试技巧"></a>七、调试技巧</h2><h3 id="7-1-Dump计算图"><a href="#7-1-Dump计算图" class="headerlink" title="7.1 Dump计算图"></a>7.1 Dump计算图</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">debug_kernel</span>(<span class="params">k, x</span>):</span><br><span class="line">    a = k.load(x, dvm.float32)</span><br><span class="line">    b = k.add(a, <span class="number">1.0</span>)</span><br><span class="line">    c = k.mul(b, <span class="number">2.0</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 打印计算图</span></span><br><span class="line">    <span class="built_in">print</span>(k.dump())</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> k.store(c)</span><br></pre></td></tr></table></figure>
+
+<p>输出示例：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">%0 = Load([32, 64], float32)</span><br><span class="line">%1 = Add(%0, 1.0)</span><br><span class="line">%2 = Mul(%1, 2.0)</span><br><span class="line">%3 = Store(%2)</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-2-反汇编字节码"><a href="#7-2-反汇编字节码" class="headerlink" title="7.2 反汇编字节码"></a>7.2 反汇编字节码</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">das_kernel</span>(<span class="params">k, x</span>):</span><br><span class="line">    a = k.load(x, dvm.float32)</span><br><span class="line">    b = k.add(a, <span class="number">1.0</span>)</span><br><span class="line">    </span><br><span class="line">    result = k.store(b)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 打印字节码</span></span><br><span class="line">    <span class="built_in">print</span>(k.das())</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> result</span><br></pre></td></tr></table></figure>
+
+<p>输出示例：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">V_LOAD: addr=0x..., shape=[32, 64], type=float32</span><br><span class="line">V_ADD: lhs=%0, rhs=1.0</span><br><span class="line">V_STORE: addr=0x..., src=%1</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-3-Verbose模式"><a href="#7-3-Verbose模式" class="headerlink" title="7.3 Verbose模式"></a>7.3 Verbose模式</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> dvm.tester <span class="keyword">import</span> Tester</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">verbose_test</span>():</span><br><span class="line">    t = Tester(<span class="string">&quot;vector&quot;</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># ... 构图 ...</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 详细输出模式</span></span><br><span class="line">    t.run(verbose=<span class="literal">True</span>)</span><br><span class="line">    <span class="comment"># 输出:</span></span><br><span class="line">    <span class="comment"># ******* before tiling *******</span></span><br><span class="line">    <span class="comment"># ******* after tiling *******</span></span><br><span class="line">    <span class="comment"># ********* bytecode *********</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="八、实战案例"><a href="#八、实战案例" class="headerlink" title="八、实战案例"></a>八、实战案例</h2><h3 id="8-1-LayerNorm实现"><a href="#8-1-LayerNorm实现" class="headerlink" title="8.1 LayerNorm实现"></a>8.1 LayerNorm实现</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> dvm</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"></span><br><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">layer_norm</span>(<span class="params">k, x, gamma, beta, eps</span>):</span><br><span class="line">    x = k.load(x, dvm.float32)</span><br><span class="line">    gamma = k.load(gamma, dvm.float32)</span><br><span class="line">    beta = k.load(beta, dvm.float32)</span><br><span class="line">    eps = k.scalar(eps)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 计算均值</span></span><br><span class="line">    mean = k.<span class="built_in">sum</span>(x, (-<span class="number">1</span>,), <span class="literal">True</span>)</span><br><span class="line">    mean = k.div(mean, x.shape()[-<span class="number">1</span>])</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 计算方差</span></span><br><span class="line">    x_sub = k.sub(x, mean)</span><br><span class="line">    var = k.mul(x_sub, x_sub)</span><br><span class="line">    var = k.<span class="built_in">sum</span>(var, (-<span class="number">1</span>,), <span class="literal">True</span>)</span><br><span class="line">    var = k.div(var, x.shape()[-<span class="number">1</span>])</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 归一化</span></span><br><span class="line">    var_eps = k.add(var, eps)</span><br><span class="line">    std = k.sqrt(var_eps)</span><br><span class="line">    x_norm = k.div(x_sub, std)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 缩放和平移</span></span><br><span class="line">    out = k.mul(gamma, x_norm)</span><br><span class="line">    out = k.add(out, beta)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> k.store(out)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 测试</span></span><br><span class="line">x = np.random.randn(<span class="number">32</span>, <span class="number">128</span>).astype(np.float32)</span><br><span class="line">gamma = np.ones(<span class="number">128</span>, dtype=np.float32)</span><br><span class="line">beta = np.zeros(<span class="number">128</span>, dtype=np.float32)</span><br><span class="line"></span><br><span class="line">result = layer_norm(x, gamma, beta, <span class="number">1e-5</span>)</span><br></pre></td></tr></table></figure>
+
+<h3 id="8-2-Softmax实现"><a href="#8-2-Softmax实现" class="headerlink" title="8.2 Softmax实现"></a>8.2 Softmax实现</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">softmax</span>(<span class="params">k, x</span>):</span><br><span class="line">    x = k.load(x, dvm.float32)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 数值稳定性：减去最大值</span></span><br><span class="line">    max_x = k.<span class="built_in">max</span>(x, (-<span class="number">1</span>,), <span class="literal">True</span>)</span><br><span class="line">    x_sub = k.sub(x, max_x)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 计算exp</span></span><br><span class="line">    exp_x = k.exp(x_sub)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 计算sum</span></span><br><span class="line">    sum_exp = k.<span class="built_in">sum</span>(exp_x, (-<span class="number">1</span>,), <span class="literal">True</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 归一化</span></span><br><span class="line">    out = k.div(exp_x, sum_exp)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> k.store(out)</span><br></pre></td></tr></table></figure>
+
+<h3 id="8-3-GELU实现"><a href="#8-3-GELU实现" class="headerlink" title="8.3 GELU实现"></a>8.3 GELU实现</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> math</span><br><span class="line"></span><br><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">gelu</span>(<span class="params">k, x</span>):</span><br><span class="line">    x = k.load(x, dvm.float32)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># GELU(x) = 0.5 * x * (1 + tanh(sqrt(2/pi) * (x + 0.044715 * x^3)))</span></span><br><span class="line">    sqrt_2_pi = math.sqrt(<span class="number">2.0</span> / math.pi)</span><br><span class="line">    </span><br><span class="line">    x3 = k.mul(x, x)</span><br><span class="line">    x3 = k.mul(x3, x)</span><br><span class="line">    x3 = k.mul(x3, <span class="number">0.044715</span>)</span><br><span class="line">    </span><br><span class="line">    inner = k.add(x, x3)</span><br><span class="line">    inner = k.mul(inner, sqrt_2_pi)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># tanh近似实现</span></span><br><span class="line">    exp_2x = k.exp(inner)</span><br><span class="line">    exp_neg_2x = k.exp(k.mul(inner, -<span class="number">1.0</span>))</span><br><span class="line">    tanh_x = k.div(</span><br><span class="line">        k.sub(exp_2x, exp_neg_2x),</span><br><span class="line">        k.add(exp_2x, exp_neg_2x)</span><br><span class="line">    )</span><br><span class="line">    </span><br><span class="line">    one_plus_tanh = k.add(<span class="number">1.0</span>, tanh_x)</span><br><span class="line">    out = k.mul(<span class="number">0.5</span>, x)</span><br><span class="line">    out = k.mul(out, one_plus_tanh)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> k.store(out)</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="九、API速查表"><a href="#九、API速查表" class="headerlink" title="九、API速查表"></a>九、API速查表</h2><h3 id="9-1-Kernel类型常量"><a href="#9-1-Kernel类型常量" class="headerlink" title="9.1 Kernel类型常量"></a>9.1 Kernel类型常量</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">dvm.Kernel.K_VEC     <span class="comment"># Vector Kernel</span></span><br><span class="line">dvm.Kernel.K_CUBE    <span class="comment"># Cube Kernel</span></span><br><span class="line">dvm.Kernel.K_MIX     <span class="comment"># Mix Kernel</span></span><br><span class="line">dvm.Kernel.K_PARAL   <span class="comment"># Parallel Kernel</span></span><br><span class="line">dvm.Kernel.K_SEQ     <span class="comment"># Sequence Kernel</span></span><br><span class="line">dvm.Kernel.K_SPLIT   <span class="comment"># Split Kernel</span></span><br><span class="line">dvm.Kernel.K_EAGER   <span class="comment"># Eager Kernel</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="9-2-Kernel标志常量"><a href="#9-2-Kernel标志常量" class="headerlink" title="9.2 Kernel标志常量"></a>9.2 Kernel标志常量</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dvm.Kernel.F_DYN     <span class="comment"># 动态Shape标志</span></span><br><span class="line">dvm.Kernel.F_UWS     <span class="comment"># 统一Workspace标志</span></span><br><span class="line">dvm.Kernel.F_SPEC    <span class="comment"># 投机执行标志</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="9-3-完整API列表"><a href="#9-3-完整API列表" class="headerlink" title="9.3 完整API列表"></a>9.3 完整API列表</h3><table>
+<thead>
+<tr>
+<th>类别</th>
+<th>API</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>内存</td>
+<td>load, view_load, store</td>
+<td>数据加载存储</td>
+</tr>
+<tr>
+<td>一元</td>
+<td>sqrt, abs, log, exp, reciprocal</td>
+<td>数学函数</td>
+</tr>
+<tr>
+<td>一元</td>
+<td>round, floor, ceil, trunc</td>
+<td>取整函数</td>
+</tr>
+<tr>
+<td>一元</td>
+<td>logical_not, isfinite</td>
+<td>逻辑函数</td>
+</tr>
+<tr>
+<td>二元</td>
+<td>add, sub, mul, div, pow</td>
+<td>算术运算</td>
+</tr>
+<tr>
+<td>二元</td>
+<td>equal, not_equal, greater, less</td>
+<td>比较运算</td>
+</tr>
+<tr>
+<td>二元</td>
+<td>maximum, minimum</td>
+<td>极值运算</td>
+</tr>
+<tr>
+<td>二元</td>
+<td>logical_and, logical_or</td>
+<td>逻辑运算</td>
+</tr>
+<tr>
+<td>归约</td>
+<td>sum, max, min</td>
+<td>Reduce操作</td>
+</tr>
+<tr>
+<td>矩阵</td>
+<td>matmul, grouped_matmul</td>
+<td>矩阵乘法</td>
+</tr>
+<tr>
+<td>形状</td>
+<td>reshape, broadcast, copy</td>
+<td>形状操作</td>
+</tr>
+<tr>
+<td>类型</td>
+<td>cast</td>
+<td>类型转换</td>
+</tr>
+<tr>
+<td>条件</td>
+<td>select</td>
+<td>条件选择</td>
+</tr>
+<tr>
+<td>通信</td>
+<td>allreduce, allgather, reducescatter</td>
+<td>通信算子</td>
+</tr>
+<tr>
+<td>调试</td>
+<td>dump, das</td>
+<td>调试输出</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="十、总结"><a href="#十、总结" class="headerlink" title="十、总结"></a>十、总结</h2><p>本文详细介绍了DVM的Python接口架构和使用方法：</p>
+<ol>
+<li><strong>核心类</strong>：DataType、NDObject、IntArrayRef、ScalarRef</li>
+<li><strong>Kernel API</strong>：内存操作、计算操作、矩阵乘法等</li>
+<li><strong>装饰器机制</strong>：@dvm.kernel的工作原理</li>
+<li><strong>测试工具</strong>：Tester类的使用方法</li>
+<li><strong>高级特性</strong>：Parallel、Sequence、通信算子</li>
+<li><strong>调试技巧</strong>：Dump、反汇编、Verbose模式</li>
+<li><strong>实战案例</strong>：LayerNorm、Softmax、GELU实现</li>
+</ol>
+<p>通过掌握这些内容，你可以高效地使用DVM开发自定义算子，实现高性能的算子融合优化。</p>
+<hr>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://gitcode.com/mindspore/dvm">DVM官方仓库</a></li>
+<li><a href="../docs/tutorial.md">用户开发指南</a></li>
+<li><a href="../python/dvm/_dvm_py.pyi">Python接口定义</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/myblog/2026/05/19/03_DVM%E6%9E%B6%E6%9E%84%E8%A7%A3%E6%9E%90%EF%BC%9AKernel%E5%AF%B9%E8%B1%A1%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/" rel="prev" title="DVM架构解析：Kernel对象的设计与实现">
+                  <i class="fa fa-angle-left"></i> DVM架构解析：Kernel对象的设计与实现
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/myblog/2026/05/19/01_DVM%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8%EF%BC%9A%E4%BB%8EHello%20World%E5%88%B0%E8%87%AA%E5%AE%9A%E4%B9%89%E7%AE%97%E5%AD%90/" rel="next" title="DVM快速入门：从Hello World到自定义算子">
+                  DVM快速入门：从Hello World到自定义算子 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2025 – 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">chujinjin</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

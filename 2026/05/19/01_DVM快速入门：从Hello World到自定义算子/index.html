@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/myblog/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/myblog/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/myblog/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/myblog/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/myblog/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"chujinjin101.github.io","root":"/myblog/","images":"/myblog/images","scheme":"Pisces","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/myblog/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/myblog/js/config.js" defer></script>
+
+    <meta name="description" content="DVM快速入门：从Hello World到自定义算子前言在深度学习领域，算子融合是提升模型性能的关键技术之一。传统的算子融合方案通常需要预先手写融合大算子或在编译阶段静态生成，这在动态Shape、动态图等场景下存在明显局限性。DVM（Device Virtual Machine）作为业界唯一的微秒级实时AI算子编译和执行框架，创新性地将算子编译过程从编译态延后到执行态，实现了根据运行时具体Shap">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DVM快速入门：从Hello World到自定义算子">
+<meta property="og:url" content="https://chujinjin101.github.io/myblog/2026/05/19/01_DVM%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8%EF%BC%9A%E4%BB%8EHello%20World%E5%88%B0%E8%87%AA%E5%AE%9A%E4%B9%89%E7%AE%97%E5%AD%90/index.html">
+<meta property="og:site_name" content="chu的技术博客">
+<meta property="og:description" content="DVM快速入门：从Hello World到自定义算子前言在深度学习领域，算子融合是提升模型性能的关键技术之一。传统的算子融合方案通常需要预先手写融合大算子或在编译阶段静态生成，这在动态Shape、动态图等场景下存在明显局限性。DVM（Device Virtual Machine）作为业界唯一的微秒级实时AI算子编译和执行框架，创新性地将算子编译过程从编译态延后到执行态，实现了根据运行时具体Shap">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-05-19T08:33:04.000Z">
+<meta property="article:modified_time" content="2026-05-19T11:58:10.064Z">
+<meta property="article:author" content="chujinjin">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://chujinjin101.github.io/myblog/2026/05/19/01_DVM%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8%EF%BC%9A%E4%BB%8EHello%20World%E5%88%B0%E8%87%AA%E5%AE%9A%E4%B9%89%E7%AE%97%E5%AD%90/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://chujinjin101.github.io/myblog/2026/05/19/01_DVM%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8%EF%BC%9A%E4%BB%8EHello%20World%E5%88%B0%E8%87%AA%E5%AE%9A%E4%B9%89%E7%AE%97%E5%AD%90/","path":"2026/05/19/01_DVM快速入门：从Hello World到自定义算子/","title":"DVM快速入门：从Hello World到自定义算子"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>DVM快速入门：从Hello World到自定义算子 | chu的技术博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/myblog/js/utils.js" defer></script><script src="/myblog/js/motion.js" defer></script><script src="/myblog/js/sidebar.js" defer></script><script src="/myblog/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/myblog/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/myblog/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/myblog/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">chu的技术博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/myblog/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/myblog/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-tags"><a href="/myblog/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#DVM%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8%EF%BC%9A%E4%BB%8EHello-World%E5%88%B0%E8%87%AA%E5%AE%9A%E4%B9%89%E7%AE%97%E5%AD%90"><span class="nav-number">1.</span> <span class="nav-text">DVM快速入门：从Hello World到自定义算子</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81DVM%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">1.2.</span> <span class="nav-text">一、DVM是什么？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-%E6%A0%B8%E5%BF%83%E5%AE%9A%E4%BD%8D"><span class="nav-number">1.2.1.</span> <span class="nav-text">1.1 核心定位</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-%E4%B8%89%E5%B1%82%E6%9E%B6%E6%9E%84"><span class="nav-number">1.2.2.</span> <span class="nav-text">1.2 三层架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-%E6%A0%B8%E5%BF%83%E4%BC%98%E5%8A%BF"><span class="nav-number">1.2.3.</span> <span class="nav-text">1.3 核心优势</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87"><span class="nav-number">1.3.</span> <span class="nav-text">二、环境准备</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-%E7%B3%BB%E7%BB%9F%E8%A6%81%E6%B1%82"><span class="nav-number">1.3.1.</span> <span class="nav-text">2.1 系统要求</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE"><span class="nav-number">1.3.2.</span> <span class="nav-text">2.2 环境配置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E3%80%81Hello-World%EF%BC%9A%E6%9C%80%E7%AE%80%E5%8D%95%E7%9A%84Add%E7%AE%97%E5%AD%90"><span class="nav-number">1.4.</span> <span class="nav-text">三、Hello World：最简单的Add算子</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-Python%E7%89%88%E6%9C%AC"><span class="nav-number">1.4.1.</span> <span class="nav-text">3.1 Python版本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-%E4%BB%A3%E7%A0%81%E8%A7%A3%E6%9E%90"><span class="nav-number">1.4.2.</span> <span class="nav-text">3.2 代码解析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B"><span class="nav-number">1.4.3.</span> <span class="nav-text">3.3 执行流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-%E5%8A%A8%E6%80%81Shape%E6%94%AF%E6%8C%81"><span class="nav-number">1.4.4.</span> <span class="nav-text">3.4 动态Shape支持</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E8%BF%9B%E9%98%B6%E7%A4%BA%E4%BE%8B%EF%BC%9ABatchNorm%E7%AE%97%E5%AD%90"><span class="nav-number">1.5.</span> <span class="nav-text">四、进阶示例：BatchNorm算子</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-%E5%AE%8C%E6%95%B4%E4%BB%A3%E7%A0%81"><span class="nav-number">1.5.1.</span> <span class="nav-text">4.1 完整代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-%E5%85%B3%E9%94%AEAPI%E8%A7%A3%E6%9E%90"><span class="nav-number">1.5.2.</span> <span class="nav-text">4.2 关键API解析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-%E8%9E%8D%E5%90%88%E6%95%88%E6%9E%9C"><span class="nav-number">1.5.3.</span> <span class="nav-text">4.3 融合效果</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94%E3%80%81%E9%AB%98%E7%BA%A7%E7%A4%BA%E4%BE%8B%EF%BC%9AAttention%E7%AE%97%E5%AD%90"><span class="nav-number">1.6.</span> <span class="nav-text">五、高级示例：Attention算子</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-%E5%AE%8C%E6%95%B4%E4%BB%A3%E7%A0%81"><span class="nav-number">1.6.1.</span> <span class="nav-text">5.1 完整代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-MatMul%E6%93%8D%E4%BD%9C"><span class="nav-number">1.6.2.</span> <span class="nav-text">5.2 MatMul操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2"><span class="nav-number">1.6.3.</span> <span class="nav-text">5.3 类型转换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-4-%E5%AD%90%E5%87%BD%E6%95%B0%E5%B0%81%E8%A3%85"><span class="nav-number">1.6.4.</span> <span class="nav-text">5.4 子函数封装</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD%E3%80%81MatMul%E5%90%8E%E8%9E%8D%E5%90%88%E7%A4%BA%E4%BE%8B"><span class="nav-number">1.7.</span> <span class="nav-text">六、MatMul后融合示例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-%E5%AE%8C%E6%95%B4%E4%BB%A3%E7%A0%81"><span class="nav-number">1.7.1.</span> <span class="nav-text">6.1 完整代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-Mix-Kernel%E5%8E%9F%E7%90%86"><span class="nav-number">1.7.2.</span> <span class="nav-text">6.2 Mix Kernel原理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%83%E3%80%81C-%E6%8E%A5%E5%8F%A3%E4%BD%BF%E7%94%A8"><span class="nav-number">1.8.</span> <span class="nav-text">七、C++接口使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#7-1-%E5%AE%8C%E6%95%B4%E7%A4%BA%E4%BE%8B"><span class="nav-number">1.8.1.</span> <span class="nav-text">7.1 完整示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-2-%E5%85%B3%E9%94%AE%E6%AD%A5%E9%AA%A4"><span class="nav-number">1.8.2.</span> <span class="nav-text">7.2 关键步骤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-3-%E5%8A%A8%E6%80%81Shape%E5%A4%84%E7%90%86"><span class="nav-number">1.8.3.</span> <span class="nav-text">7.3 动态Shape处理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AB%E3%80%81%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7"><span class="nav-number">1.9.</span> <span class="nav-text">八、调试技巧</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#8-1-Dump%E5%85%83%E7%AE%97%E5%AD%90%E6%9E%84%E5%9B%BE"><span class="nav-number">1.9.1.</span> <span class="nav-text">8.1 Dump元算子构图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-2-C-%E7%89%88%E6%9C%AC%E8%B0%83%E8%AF%95"><span class="nav-number">1.9.2.</span> <span class="nav-text">8.2 C++版本调试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-3-%E4%BD%BF%E7%94%A8Debug%E7%89%88%E6%9C%AC"><span class="nav-number">1.9.3.</span> <span class="nav-text">8.3 使用Debug版本</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B9%9D%E3%80%81API%E9%80%9F%E6%9F%A5%E8%A1%A8"><span class="nav-number">1.10.</span> <span class="nav-text">九、API速查表</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#9-1-%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.10.1.</span> <span class="nav-text">9.1 数据类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-2-%E6%9E%84%E5%9B%BEAPI"><span class="nav-number">1.10.2.</span> <span class="nav-text">9.2 构图API</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-3-Kernel%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.10.3.</span> <span class="nav-text">9.3 Kernel类型</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%81%E3%80%81%E6%80%BB%E7%BB%93"><span class="nav-number">1.11.</span> <span class="nav-text">十、总结</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E8%A6%81%E7%82%B9"><span class="nav-number">1.11.1.</span> <span class="nav-text">关键要点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8B%E4%B8%80%E6%AD%A5%E5%AD%A6%E4%B9%A0"><span class="nav-number">1.11.2.</span> <span class="nav-text">下一步学习</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="nav-number">1.12.</span> <span class="nav-text">参考资料</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="chujinjin"
+      src="/myblog/images/mine.jpg">
+  <p class="site-author-name" itemprop="name">chujinjin</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/myblog/archives/">
+          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/chujinjin101" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;chujinjin101" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:you@example.com" title="Email → mailto:you@example.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>Email</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+        <div class="back-to-top animated" role="button" aria-label="返回顶部">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://chujinjin101.github.io/myblog/2026/05/19/01_DVM%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8%EF%BC%9A%E4%BB%8EHello%20World%E5%88%B0%E8%87%AA%E5%AE%9A%E4%B9%89%E7%AE%97%E5%AD%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/myblog/images/mine.jpg">
+      <meta itemprop="name" content="chujinjin">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="chu的技术博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="DVM快速入门：从Hello World到自定义算子 | chu的技术博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          DVM快速入门：从Hello World到自定义算子
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2026-05-19 16:33:04 / 修改时间：19:58:10" itemprop="dateCreated datePublished" datetime="2026-05-19T16:33:04+08:00">2026-05-19</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="DVM快速入门：从Hello-World到自定义算子"><a href="#DVM快速入门：从Hello-World到自定义算子" class="headerlink" title="DVM快速入门：从Hello World到自定义算子"></a>DVM快速入门：从Hello World到自定义算子</h1><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在深度学习领域，算子融合是提升模型性能的关键技术之一。传统的算子融合方案通常需要预先手写融合大算子或在编译阶段静态生成，这在动态Shape、动态图等场景下存在明显局限性。DVM（Device Virtual Machine）作为业界唯一的微秒级实时AI算子编译和执行框架，创新性地将算子编译过程从编译态延后到执行态，实现了根据运行时具体Shape进行实时算子编译和执行。</p>
+<p>本文将带你快速入门DVM，从最简单的Hello World示例开始，逐步深入到自定义算子的开发。</p>
+<hr>
+<h2 id="一、DVM是什么？"><a href="#一、DVM是什么？" class="headerlink" title="一、DVM是什么？"></a>一、DVM是什么？</h2><h3 id="1-1-核心定位"><a href="#1-1-核心定位" class="headerlink" title="1.1 核心定位"></a>1.1 核心定位</h3><p>DVM是一个<strong>微秒级实时AI算子编译和执行框架</strong>，主要解决以下问题：</p>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>传统方案</th>
+<th>DVM方案</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>动态Shape支持</td>
+<td>编译时无法确定Shape，只能使用shape-general策略</td>
+<td>运行时根据具体Shape实时编译</td>
+</tr>
+<tr>
+<td>编译性能</td>
+<td>编译耗时秒级，与执行时间（微秒级）相差万倍</td>
+<td>编译耗时降至百微秒级</td>
+</tr>
+<tr>
+<td>融合覆盖范围</td>
+<td>预先手写融合大算子，覆盖有限</td>
+<td>自动融合，支持任意元算子组合</td>
+</tr>
+</tbody></table>
+<h3 id="1-2-三层架构"><a href="#1-2-三层架构" class="headerlink" title="1.2 三层架构"></a>1.2 三层架构</h3><p>DVM采用清晰的三层架构设计：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">┌─────────────────────────────────────────────────────────┐</span><br><span class="line">│                    用户层 (Host侧)                        │</span><br><span class="line">│  基于元算子进行融合算子的计算逻辑构图表达                    │</span><br><span class="line">│  API: Load, Store, Binary, Unary, Reduce, MatMul...     │</span><br><span class="line">├─────────────────────────────────────────────────────────┤</span><br><span class="line">│                   编译器层 (Host侧)                       │</span><br><span class="line">│  实时编译生成以Tile为粒度的元算子字节码虚拟指令              │</span><br><span class="line">│  流程: Shape推导 → Tiling策略 → 代码生成                  │</span><br><span class="line">├─────────────────────────────────────────────────────────┤</span><br><span class="line">│                   虚拟机层 (Device侧)                     │</span><br><span class="line">│  解释执行DVM编译器生成的字节码虚拟指令                       │</span><br><span class="line">│  核心: AIV核(Vector计算) + AIC核(Cube计算)               │</span><br><span class="line">└─────────────────────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-3-核心优势"><a href="#1-3-核心优势" class="headerlink" title="1.3 核心优势"></a>1.3 核心优势</h3><ol>
+<li><strong>微秒级编译</strong>：大部分融合算子能在百微秒内完成编译</li>
+<li><strong>原生动态Shape支持</strong>：无需预先知道Shape信息</li>
+<li><strong>高性能执行</strong>：借助Ascend SIMD指令架构，性能可持平或超越手写算子</li>
+<li><strong>灵活的融合能力</strong>：支持Vector、Cube、Mix等多种融合模式</li>
+</ol>
+<hr>
+<h2 id="二、环境准备"><a href="#二、环境准备" class="headerlink" title="二、环境准备"></a>二、环境准备</h2><h3 id="2-1-系统要求"><a href="#2-1-系统要求" class="headerlink" title="2.1 系统要求"></a>2.1 系统要求</h3><table>
+<thead>
+<tr>
+<th>类别</th>
+<th>要求</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>硬件</td>
+<td>Host: X86&#x2F;aarch64, Device: Ascend NPU (推荐A2&#x2F;A3)</td>
+</tr>
+<tr>
+<td>操作系统</td>
+<td>Linux</td>
+</tr>
+<tr>
+<td>CANN</td>
+<td>推荐8.3版本</td>
+</tr>
+<tr>
+<td>g++</td>
+<td>推荐7.3.0</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>推荐3.7+，需包含numpy、pybind11包</td>
+</tr>
+</tbody></table>
+<h3 id="2-2-环境配置"><a href="#2-2-环境配置" class="headerlink" title="2.2 环境配置"></a>2.2 环境配置</h3><p><strong>步骤1：配置CANN环境变量</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">export</span> ASCEND_CUSTOM_PATH=/&lt;path_to_cann&gt;</span><br><span class="line"><span class="built_in">source</span> <span class="variable">$ASCEND_CUSTOM_PATH</span>/ascend_toolkit/set_env.sh</span><br></pre></td></tr></table></figure>
+
+<p><strong>步骤2：配置DVM编译变量</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> dvm</span><br><span class="line"><span class="built_in">source</span> env.sh</span><br></pre></td></tr></table></figure>
+
+<p><strong>步骤3：编译DVM</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 编译生成libdvm.a和_dvm_py.so</span></span><br><span class="line">make -j32</span><br><span class="line"></span><br><span class="line"><span class="comment"># 如果需要Debug版本</span></span><br><span class="line">make dbg=1 -j32</span><br></pre></td></tr></table></figure>
+
+<p>编译成功后会生成：</p>
+<ul>
+<li><code>libdvm.a</code>：DVM静态库（C++接口使用）</li>
+<li><code>_dvm_py.so</code>：Python绑定库</li>
+</ul>
+<hr>
+<h2 id="三、Hello-World：最简单的Add算子"><a href="#三、Hello-World：最简单的Add算子" class="headerlink" title="三、Hello World：最简单的Add算子"></a>三、Hello World：最简单的Add算子</h2><p>让我们从最简单的Add算子开始，体验DVM的基本使用方式。</p>
+<h3 id="3-1-Python版本"><a href="#3-1-Python版本" class="headerlink" title="3.1 Python版本"></a>3.1 Python版本</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> dvm</span><br><span class="line"></span><br><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">my_add</span>(<span class="params">k, x, y</span>):</span><br><span class="line">    a = k.load(x, dvm.float32)</span><br><span class="line">    b = k.load(y, dvm.float32)</span><br><span class="line">    c = k.add(a, b)</span><br><span class="line">    d = k.store(c)</span><br><span class="line">    <span class="keyword">return</span> d</span><br><span class="line"></span><br><span class="line">x = np.full([<span class="number">32</span>, <span class="number">32</span>], <span class="number">0.1</span>, np.float32)</span><br><span class="line">y = np.full([<span class="number">32</span>, <span class="number">32</span>], <span class="number">0.3</span>, np.float32)</span><br><span class="line">z = my_add(x, y)</span><br><span class="line"><span class="built_in">print</span>(z)</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-2-代码解析"><a href="#3-2-代码解析" class="headerlink" title="3.2 代码解析"></a>3.2 代码解析</h3><p>让我们逐行分析这段代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">my_add</span>(<span class="params">k, x, y</span>):</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>@dvm.kernel</code>：装饰器，将普通Python函数转换为DVM Kernel</li>
+<li><code>k</code>：Kernel对象，由装饰器自动注入，用于构图</li>
+<li><code>x, y</code>：占位符参数，调用时传入真实Tensor</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">a = k.load(x, dvm.float32)</span><br><span class="line">b = k.load(y, dvm.float32)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>k.load()</code>：从全局内存加载数据到UB（Unified Buffer）</li>
+<li><code>dvm.float32</code>：指定数据类型</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">c = k.add(a, b)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>k.add()</code>：执行加法操作</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">d = k.store(c)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>k.store()</code>：将结果存储回全局内存</li>
+</ul>
+<h3 id="3-3-执行流程"><a href="#3-3-执行流程" class="headerlink" title="3.3 执行流程"></a>3.3 执行流程</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">用户调用 my_add(x, y)</span><br><span class="line">        ↓</span><br><span class="line">装饰器自动处理：</span><br><span class="line">  1. 创建Kernel对象</span><br><span class="line">  2. 执行构图函数</span><br><span class="line">  3. Normalize（Shape推导）</span><br><span class="line">  4. CodeGen（字节码生成）</span><br><span class="line">  5. Launch（下发执行）</span><br><span class="line">        ↓</span><br><span class="line">返回执行结果</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-4-动态Shape支持"><a href="#3-4-动态Shape支持" class="headerlink" title="3.4 动态Shape支持"></a>3.4 动态Shape支持</h3><p>DVM天然支持动态Shape，同一个Kernel可以处理不同Shape的输入：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">x = np.full([<span class="number">32</span>, <span class="number">32</span>], <span class="number">0.1</span>, np.float32)</span><br><span class="line">y = np.full([<span class="number">32</span>, <span class="number">32</span>], <span class="number">0.3</span>, np.float32)</span><br><span class="line">z = my_add(x, y)  <span class="comment"># Shape: [32, 32]</span></span><br><span class="line"></span><br><span class="line">x = np.full([<span class="number">32</span>, <span class="number">1</span>], <span class="number">0.2</span>, np.float32)</span><br><span class="line">y = np.full([<span class="number">32</span>, <span class="number">512</span>], <span class="number">0.7</span>, np.float32)</span><br><span class="line">z = my_add(x, y)  <span class="comment"># Shape: [32, 512]，自动广播</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="四、进阶示例：BatchNorm算子"><a href="#四、进阶示例：BatchNorm算子" class="headerlink" title="四、进阶示例：BatchNorm算子"></a>四、进阶示例：BatchNorm算子</h2><p>接下来我们实现一个更复杂的BatchNorm算子，展示DVM处理多算子融合的能力。</p>
+<h3 id="4-1-完整代码"><a href="#4-1-完整代码" class="headerlink" title="4.1 完整代码"></a>4.1 完整代码</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> dvm</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">np_bn</span>(<span class="params">X, gamma, beta</span>):</span><br><span class="line">    mean = np.mean(X, axis=<span class="number">0</span>)</span><br><span class="line">    var = np.var(X, axis=<span class="number">0</span>)</span><br><span class="line">    X_norm = (X - mean) / np.sqrt(var)</span><br><span class="line">    out = gamma * X_norm + beta</span><br><span class="line">    <span class="keyword">return</span> out</span><br><span class="line"></span><br><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">bn_kernel</span>(<span class="params">k, x, gamma, beta, rec_batch</span>):</span><br><span class="line">    x = k.load(x, dvm.float32)</span><br><span class="line">    mean_sum = k.<span class="built_in">sum</span>(x, (<span class="number">0</span>,), <span class="literal">False</span>)</span><br><span class="line">    rec_batch = k.scalar(rec_batch)</span><br><span class="line">    mean = k.mul(mean_sum, rec_batch)</span><br><span class="line"></span><br><span class="line">    x_sub = k.sub(x, mean)</span><br><span class="line">    var_mul = k.mul(x_sub, x_sub)</span><br><span class="line">    var_sum = k.<span class="built_in">sum</span>(var_mul, (<span class="number">0</span>,), <span class="literal">False</span>)</span><br><span class="line">    var = k.mul(var_sum, rec_batch)</span><br><span class="line"></span><br><span class="line">    norm_sqrt = k.sqrt(var)</span><br><span class="line">    x_norm = k.div(x_sub, norm_sqrt)</span><br><span class="line"></span><br><span class="line">    gamma = k.load(gamma, dvm.float32)</span><br><span class="line">    beta = k.load(beta, dvm.float32)</span><br><span class="line">    out_mul = k.mul(gamma, x_norm)</span><br><span class="line">    out_add = k.add(out_mul, beta)</span><br><span class="line">    out = k.store(out_add)</span><br><span class="line">    <span class="keyword">return</span> out</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">my_bn</span>(<span class="params">x, gamma, beta, batch_size</span>):</span><br><span class="line">    <span class="keyword">return</span> bn_kernel(x, gamma, beta, <span class="number">1.0</span> / batch_size)</span><br><span class="line"></span><br><span class="line">input_x = np.random.normal(<span class="number">0</span>, <span class="number">1</span>, (<span class="number">32</span>, <span class="number">1000</span>)).astype(np.float32)</span><br><span class="line">gamma = np.random.normal(<span class="number">0</span>, <span class="number">1</span>, [<span class="number">1000</span>]).astype(np.float32)</span><br><span class="line">beta = np.random.normal(<span class="number">0</span>, <span class="number">1</span>, [<span class="number">1000</span>]).astype(np.float32)</span><br><span class="line">out = my_bn(input_x, gamma, beta, <span class="number">32</span>)</span><br><span class="line"></span><br><span class="line">expect = np_bn(input_x, gamma, beta)</span><br><span class="line"><span class="keyword">assert</span> np.allclose(out, expect, rtol=<span class="number">1e-3</span>, atol=<span class="number">1e-3</span>)</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-2-关键API解析"><a href="#4-2-关键API解析" class="headerlink" title="4.2 关键API解析"></a>4.2 关键API解析</h3><p><strong>Reduce操作</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mean_sum = k.<span class="built_in">sum</span>(x, (<span class="number">0</span>,), <span class="literal">False</span>)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第一个参数：输入张量</li>
+<li>第二个参数：reduce的维度，元组形式</li>
+<li>第三个参数：是否保持维度</li>
+</ul>
+<p><strong>标量操作</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rec_batch = k.scalar(rec_batch)</span><br><span class="line">mean = k.mul(mean_sum, rec_batch)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>k.scalar()</code>：将Python标量转换为DVM标量</li>
+<li>可以与张量进行运算</li>
+</ul>
+<h3 id="4-3-融合效果"><a href="#4-3-融合效果" class="headerlink" title="4.3 融合效果"></a>4.3 融合效果</h3><p>BatchNorm包含多个操作：</p>
+<ol>
+<li>计算均值：sum → mul</li>
+<li>计算方差：sub → mul → sum → mul</li>
+<li>归一化：sub → div</li>
+<li>缩放平移：mul → add</li>
+</ol>
+<p>DVM会将这些操作自动融合为一个Kernel，避免中间结果的反复读写，大幅提升性能。</p>
+<hr>
+<h2 id="五、高级示例：Attention算子"><a href="#五、高级示例：Attention算子" class="headerlink" title="五、高级示例：Attention算子"></a>五、高级示例：Attention算子</h2><p>Attention是Transformer的核心组件，让我们看看如何用DVM实现。</p>
+<h3 id="5-1-完整代码"><a href="#5-1-完整代码" class="headerlink" title="5.1 完整代码"></a>5.1 完整代码</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> math</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> dvm</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">dvm_softmax</span>(<span class="params">k, x, axis</span>):</span><br><span class="line">    x = k.cast(x, dvm.float32)</span><br><span class="line">    max_x = k.<span class="built_in">max</span>(x, (axis,), <span class="literal">True</span>)</span><br><span class="line">    x = k.sub(x, max_x)</span><br><span class="line">    exp_x = k.exp(x)</span><br><span class="line">    denom = k.<span class="built_in">sum</span>(exp_x, (axis,), <span class="literal">True</span>)</span><br><span class="line">    out = k.div(exp_x, denom)</span><br><span class="line">    <span class="keyword">return</span> k.cast(out, dvm.float16)</span><br><span class="line"></span><br><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">attention_kernel</span>(<span class="params">k, q, k_mat, v, scale</span>):</span><br><span class="line">    q = k.load(q, dvm.float16)</span><br><span class="line">    k_mat = k.load(k_mat, dvm.float16)</span><br><span class="line">    v = k.load(v, dvm.float16)</span><br><span class="line">    scale = k.scalar(scale)</span><br><span class="line">    </span><br><span class="line">    scores = k.matmul(q, k_mat, <span class="literal">False</span>, <span class="literal">True</span>)</span><br><span class="line">    scores = k.mul(scores, scale)</span><br><span class="line">    probs = dvm_softmax(k, scores, <span class="number">1</span>)</span><br><span class="line">    out = k.matmul(probs, v, <span class="literal">False</span>, <span class="literal">False</span>)</span><br><span class="line">    out = k.store(out)</span><br><span class="line">    <span class="keyword">return</span> out</span><br><span class="line"></span><br><span class="line">q = np.random.normal(<span class="number">0</span>, <span class="number">0.02</span>, (<span class="number">4</span>, <span class="number">8</span>)).astype(np.float16)</span><br><span class="line">k_mat = np.random.normal(<span class="number">0</span>, <span class="number">0.02</span>, (<span class="number">6</span>, <span class="number">8</span>)).astype(np.float16)</span><br><span class="line">v = np.random.normal(<span class="number">0</span>, <span class="number">0.02</span>, (<span class="number">6</span>, <span class="number">12</span>)).astype(np.float16)</span><br><span class="line">scale = <span class="number">1.0</span> / math.sqrt(q.shape[-<span class="number">1</span>])</span><br><span class="line"></span><br><span class="line">out = attention_kernel(q, k_mat, v, scale)</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-2-MatMul操作"><a href="#5-2-MatMul操作" class="headerlink" title="5.2 MatMul操作"></a>5.2 MatMul操作</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scores = k.matmul(q, k_mat, <span class="literal">False</span>, <span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第一个参数：左矩阵</li>
+<li>第二个参数：右矩阵</li>
+<li>第三个参数：是否转置左矩阵</li>
+<li>第四个参数：是否转置右矩阵</li>
+</ul>
+<h3 id="5-3-类型转换"><a href="#5-3-类型转换" class="headerlink" title="5.3 类型转换"></a>5.3 类型转换</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">x = k.cast(x, dvm.float32)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>支持多种数据类型转换：float16 ↔ float32, bfloat16 ↔ float32等</li>
+</ul>
+<h3 id="5-4-子函数封装"><a href="#5-4-子函数封装" class="headerlink" title="5.4 子函数封装"></a>5.4 子函数封装</h3><p>DVM支持将常用操作封装为Python函数：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">dvm_softmax</span>(<span class="params">k, x, axis</span>):</span><br><span class="line">    x = k.cast(x, dvm.float32)</span><br><span class="line">    max_x = k.<span class="built_in">max</span>(x, (axis,), <span class="literal">True</span>)</span><br><span class="line">    x = k.sub(x, max_x)</span><br><span class="line">    exp_x = k.exp(x)</span><br><span class="line">    denom = k.<span class="built_in">sum</span>(exp_x, (axis,), <span class="literal">True</span>)</span><br><span class="line">    out = k.div(exp_x, denom)</span><br><span class="line">    <span class="keyword">return</span> k.cast(out, dvm.float16)</span><br></pre></td></tr></table></figure>
+
+<p>这样可以在多个Kernel中复用。</p>
+<hr>
+<h2 id="六、MatMul后融合示例"><a href="#六、MatMul后融合示例" class="headerlink" title="六、MatMul后融合示例"></a>六、MatMul后融合示例</h2><p>DVM支持MatMul（Cube计算）与后续Vector计算的融合，这是提升性能的关键优化。</p>
+<h3 id="6-1-完整代码"><a href="#6-1-完整代码" class="headerlink" title="6.1 完整代码"></a>6.1 完整代码</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> dvm</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">dvm_silu</span>(<span class="params">k, x</span>):</span><br><span class="line">    neg = k.mul(x, -<span class="number">1.0</span>)</span><br><span class="line">    exp_neg = k.exp(neg)</span><br><span class="line">    denom = k.add(exp_neg, <span class="number">1.0</span>)</span><br><span class="line">    sigmoid = k.div(<span class="number">1.0</span>, denom)</span><br><span class="line">    <span class="keyword">return</span> k.mul(x, sigmoid)</span><br><span class="line"></span><br><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">matmul_post_fusion</span>(<span class="params">k, a, b, bias, scale, shift</span>):</span><br><span class="line">    a = k.load(a, dvm.float16)</span><br><span class="line">    b = k.load(b, dvm.float16)</span><br><span class="line">    bias = k.load(bias, dvm.float32)</span><br><span class="line">    scale = k.scalar(scale)</span><br><span class="line">    shift = k.scalar(shift)</span><br><span class="line">    </span><br><span class="line">    out = k.matmul(a, b, <span class="literal">False</span>, <span class="literal">False</span>)</span><br><span class="line">    out = k.cast(out, dvm.float32)</span><br><span class="line">    out = k.add(out, bias)</span><br><span class="line">    out = k.mul(out, scale)</span><br><span class="line">    out = k.add(out, shift)</span><br><span class="line">    out = dvm_silu(k, out)</span><br><span class="line">    out = k.store(out)</span><br><span class="line">    <span class="keyword">return</span> out</span><br><span class="line"></span><br><span class="line">m, k_dim, n = <span class="number">32</span>, <span class="number">64</span>, <span class="number">48</span></span><br><span class="line">a = np.random.normal(<span class="number">0</span>, <span class="number">0.02</span>, (m, k_dim)).astype(np.float16)</span><br><span class="line">b = np.random.normal(<span class="number">0</span>, <span class="number">0.02</span>, (k_dim, n)).astype(np.float16)</span><br><span class="line">bias = np.random.normal(<span class="number">0</span>, <span class="number">0.02</span>, (n,)).astype(np.float32)</span><br><span class="line">scale = <span class="number">0.5</span></span><br><span class="line">shift = -<span class="number">0.1</span></span><br><span class="line"></span><br><span class="line">out = matmul_post_fusion(a, b, bias, scale, shift)</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-2-Mix-Kernel原理"><a href="#6-2-Mix-Kernel原理" class="headerlink" title="6.2 Mix Kernel原理"></a>6.2 Mix Kernel原理</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">传统方式：</span><br><span class="line">MatMul → 写回GM → 读入UB → Bias → Scale → Shift → SiLU → 写回GM</span><br><span class="line">（多次GM访问，性能差）</span><br><span class="line"></span><br><span class="line">DVM Mix融合：</span><br><span class="line">MatMul → [L1 Cache] → Bias → Scale → Shift → SiLU → 写回GM</span><br><span class="line">（Cube和Vector在Tile粒度Overlap，减少GM访问）</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="七、C-接口使用"><a href="#七、C-接口使用" class="headerlink" title="七、C++接口使用"></a>七、C++接口使用</h2><p>对于需要更高性能或更细粒度控制的场景，可以使用C++接口。</p>
+<h3 id="7-1-完整示例"><a href="#7-1-完整示例" class="headerlink" title="7.1 完整示例"></a>7.1 完整示例</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;vector&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;acl/acl_rt.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;dvm.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="built_in">aclrtSetDevice</span>(<span class="number">0</span>);</span><br><span class="line">    </span><br><span class="line">    <span class="type">float</span> *host_x = <span class="keyword">new</span> <span class="type">float</span>[<span class="number">1024</span>];</span><br><span class="line">    <span class="type">float</span> *host_y = <span class="keyword">new</span> <span class="type">float</span>[<span class="number">1024</span>];</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">size_t</span> i = <span class="number">0</span>; i &lt; <span class="number">1024</span>; ++i) &#123;</span><br><span class="line">        host_x[i] = <span class="number">2.0f</span>;</span><br><span class="line">        host_y[i] = <span class="number">3.0f</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="type">void</span> *dev_x, *dev_y, *dev_out;</span><br><span class="line">    <span class="built_in">aclrtMalloc</span>(&amp;dev_x, <span class="number">1024</span> * <span class="built_in">sizeof</span>(<span class="type">float</span>), ACL_MEM_TYPE_HIGH_BAND_WIDTH);</span><br><span class="line">    <span class="built_in">aclrtMalloc</span>(&amp;dev_y, <span class="number">1024</span> * <span class="built_in">sizeof</span>(<span class="type">float</span>), ACL_MEM_TYPE_HIGH_BAND_WIDTH);</span><br><span class="line">    <span class="built_in">aclrtMalloc</span>(&amp;dev_out, <span class="number">1024</span> * <span class="built_in">sizeof</span>(<span class="type">float</span>), ACL_MEM_TYPE_HIGH_BAND_WIDTH);</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">aclrtMemcpyAsync</span>(dev_x, <span class="number">1024</span> * <span class="built_in">sizeof</span>(<span class="type">float</span>), host_x, </span><br><span class="line">                     <span class="number">1024</span> * <span class="built_in">sizeof</span>(<span class="type">float</span>), ACL_MEMCPY_HOST_TO_DEVICE, <span class="literal">nullptr</span>);</span><br><span class="line">    <span class="built_in">aclrtMemcpyAsync</span>(dev_y, <span class="number">1024</span> * <span class="built_in">sizeof</span>(<span class="type">float</span>), host_y, </span><br><span class="line">                     <span class="number">1024</span> * <span class="built_in">sizeof</span>(<span class="type">float</span>), ACL_MEMCPY_HOST_TO_DEVICE, <span class="literal">nullptr</span>);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 定义DVM Kernel</span></span><br><span class="line">    dvm::Kernel kernel;</span><br><span class="line">    std::vector&lt;<span class="type">int64_t</span>&gt; shape_data = &#123;<span class="number">1024</span>&#125;;</span><br><span class="line">    <span class="function">dvm::IntArrayRef <span class="title">shape_ref</span><span class="params">(shape_data)</span></span>;</span><br><span class="line">    </span><br><span class="line">    kernel.<span class="built_in">Reset</span>(dvm::kVector, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">auto</span> x = kernel.<span class="built_in">Load</span>(dev_x, &amp;shape_ref, dvm::kFloat32);</span><br><span class="line">    <span class="keyword">auto</span> y = kernel.<span class="built_in">Load</span>(dev_y, &amp;shape_ref, dvm::kFloat32);</span><br><span class="line">    <span class="keyword">auto</span> z = kernel.<span class="built_in">Binary</span>&lt;dvm::kMul&gt;(x, y);</span><br><span class="line">    <span class="keyword">auto</span> r = kernel.<span class="built_in">Binary</span>&lt;dvm::kAdd&gt;(z, <span class="number">0.5f</span>);</span><br><span class="line">    <span class="keyword">auto</span> out = kernel.<span class="built_in">Store</span>(dev_out, r);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 编译执行</span></span><br><span class="line">    kernel.<span class="built_in">CodeGen</span>();</span><br><span class="line">    kernel.<span class="built_in">Launch</span>(<span class="literal">nullptr</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="literal">nullptr</span>);</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">aclrtSynchronizeStream</span>(<span class="literal">nullptr</span>);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 清理资源</span></span><br><span class="line">    <span class="built_in">aclrtFree</span>(dev_x);</span><br><span class="line">    <span class="built_in">aclrtFree</span>(dev_y);</span><br><span class="line">    <span class="built_in">aclrtFree</span>(dev_out);</span><br><span class="line">    <span class="keyword">delete</span>[] host_x;</span><br><span class="line">    <span class="keyword">delete</span>[] host_y;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-2-关键步骤"><a href="#7-2-关键步骤" class="headerlink" title="7.2 关键步骤"></a>7.2 关键步骤</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 1. 创建并重置Kernel</span></span><br><span class="line">dvm::Kernel kernel;</span><br><span class="line">kernel.<span class="built_in">Reset</span>(dvm::kVector, <span class="number">0</span>);  <span class="comment">// kVector类型，静态Shape</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 2. 构图</span></span><br><span class="line"><span class="keyword">auto</span> x = kernel.<span class="built_in">Load</span>(dev_x, &amp;shape_ref, dvm::kFloat32);</span><br><span class="line"><span class="keyword">auto</span> y = kernel.<span class="built_in">Load</span>(dev_y, &amp;shape_ref, dvm::kFloat32);</span><br><span class="line"><span class="keyword">auto</span> z = kernel.<span class="built_in">Binary</span>&lt;dvm::kMul&gt;(x, y);</span><br><span class="line"><span class="keyword">auto</span> out = kernel.<span class="built_in">Store</span>(dev_out, z);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 3. 编译</span></span><br><span class="line">kernel.<span class="built_in">CodeGen</span>();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 4. 执行</span></span><br><span class="line">kernel.<span class="built_in">Launch</span>(<span class="literal">nullptr</span>, <span class="number">0</span>, <span class="number">0</span>, stream);</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-3-动态Shape处理"><a href="#7-3-动态Shape处理" class="headerlink" title="7.3 动态Shape处理"></a>7.3 动态Shape处理</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">dvm::Kernel kernel;</span><br><span class="line">kernel.<span class="built_in">Reset</span>(dvm::kVector, dvm::kDynamic);  <span class="comment">// 标记为动态Shape</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 构图时使用IntArrayRef指针</span></span><br><span class="line">dvm::IntArrayRef shape_ref;</span><br><span class="line"><span class="keyword">auto</span> x = kernel.<span class="built_in">Load</span>(<span class="literal">nullptr</span>, &amp;shape_ref, dvm::kFloat32);  <span class="comment">// 地址先传nullptr</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 执行时更新Shape和地址</span></span><br><span class="line">std::vector&lt;<span class="type">int64_t</span>&gt; shape = &#123;<span class="number">32</span>, <span class="number">1024</span>&#125;;</span><br><span class="line">shape_ref = shape;</span><br><span class="line"></span><br><span class="line">kernel.<span class="built_in">Normalize</span>();  <span class="comment">// Shape推导</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 地址重定位</span></span><br><span class="line">std::vector&lt;dvm::RelocEntry&gt; relocs;</span><br><span class="line">relocs.<span class="built_in">emplace_back</span>(x, tensor_a.<span class="built_in">addr</span>());</span><br><span class="line">relocs.<span class="built_in">emplace_back</span>(out, tensor_c.<span class="built_in">addr</span>());</span><br><span class="line"></span><br><span class="line">kernel.<span class="built_in">CodeGen</span>(relocs.<span class="built_in">data</span>(), relocs.<span class="built_in">size</span>(), ws_alloc);</span><br><span class="line">kernel.<span class="built_in">Launch</span>(stream);</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="八、调试技巧"><a href="#八、调试技巧" class="headerlink" title="八、调试技巧"></a>八、调试技巧</h2><h3 id="8-1-Dump元算子构图"><a href="#8-1-Dump元算子构图" class="headerlink" title="8.1 Dump元算子构图"></a>8.1 Dump元算子构图</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">my_kernel</span>(<span class="params">k, x</span>):</span><br><span class="line">    <span class="comment"># ... 构图代码 ...</span></span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 在调用前设置调试模式</span></span><br><span class="line">my_kernel.debug = <span class="literal">True</span></span><br><span class="line">result = my_kernel(x)</span><br></pre></td></tr></table></figure>
+
+<h3 id="8-2-C-版本调试"><a href="#8-2-C-版本调试" class="headerlink" title="8.2 C++版本调试"></a>8.2 C++版本调试</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 打印元算子构图</span></span><br><span class="line">std::cout &lt;&lt; kernel.<span class="built_in">Dump</span>() &lt;&lt; std::endl;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 打印字节码反汇编</span></span><br><span class="line">kernel.<span class="built_in">CodeGen</span>();</span><br><span class="line">std::cout &lt;&lt; kernel.<span class="built_in">Das</span>() &lt;&lt; std::endl;</span><br></pre></td></tr></table></figure>
+
+<h3 id="8-3-使用Debug版本"><a href="#8-3-使用Debug版本" class="headerlink" title="8.3 使用Debug版本"></a>8.3 使用Debug版本</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make dbg=1 -j32</span><br></pre></td></tr></table></figure>
+
+<p>Debug版本会启用更多断言检查，帮助定位问题。</p>
+<hr>
+<h2 id="九、API速查表"><a href="#九、API速查表" class="headerlink" title="九、API速查表"></a>九、API速查表</h2><h3 id="9-1-数据类型"><a href="#9-1-数据类型" class="headerlink" title="9.1 数据类型"></a>9.1 数据类型</h3><table>
+<thead>
+<tr>
+<th>DVM类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>dvm.bool</td>
+<td>布尔类型</td>
+</tr>
+<tr>
+<td>dvm.float16</td>
+<td>半精度浮点</td>
+</tr>
+<tr>
+<td>dvm.bfloat16</td>
+<td>Brain Float16</td>
+</tr>
+<tr>
+<td>dvm.float32</td>
+<td>单精度浮点</td>
+</tr>
+<tr>
+<td>dvm.int32</td>
+<td>32位整数</td>
+</tr>
+</tbody></table>
+<h3 id="9-2-构图API"><a href="#9-2-构图API" class="headerlink" title="9.2 构图API"></a>9.2 构图API</h3><table>
+<thead>
+<tr>
+<th>API</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>k.load(tensor, dtype)</code></td>
+<td>加载张量</td>
+</tr>
+<tr>
+<td><code>k.store(tensor)</code></td>
+<td>存储结果</td>
+</tr>
+<tr>
+<td><code>k.add(a, b)</code></td>
+<td>加法</td>
+</tr>
+<tr>
+<td><code>k.sub(a, b)</code></td>
+<td>减法</td>
+</tr>
+<tr>
+<td><code>k.mul(a, b)</code></td>
+<td>乘法</td>
+</tr>
+<tr>
+<td><code>k.div(a, b)</code></td>
+<td>除法</td>
+</tr>
+<tr>
+<td><code>k.sqrt(x)</code></td>
+<td>平方根</td>
+</tr>
+<tr>
+<td><code>k.exp(x)</code></td>
+<td>指数</td>
+</tr>
+<tr>
+<td><code>k.sum(x, axis, keepdims)</code></td>
+<td>求和</td>
+</tr>
+<tr>
+<td><code>k.max(x, axis, keepdims)</code></td>
+<td>最大值</td>
+</tr>
+<tr>
+<td><code>k.min(x, axis, keepdims)</code></td>
+<td>最小值</td>
+</tr>
+<tr>
+<td><code>k.matmul(a, b, trans_a, trans_b)</code></td>
+<td>矩阵乘法</td>
+</tr>
+<tr>
+<td><code>k.cast(x, dtype)</code></td>
+<td>类型转换</td>
+</tr>
+</tbody></table>
+<h3 id="9-3-Kernel类型"><a href="#9-3-Kernel类型" class="headerlink" title="9.3 Kernel类型"></a>9.3 Kernel类型</h3><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>说明</th>
+<th>使用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>kVector</td>
+<td>纯Vector计算</td>
+<td>元素级操作、Reduce</td>
+</tr>
+<tr>
+<td>kCube</td>
+<td>纯MatMul计算</td>
+<td>矩阵乘法</td>
+</tr>
+<tr>
+<td>kMix</td>
+<td>Cube+Vector融合</td>
+<td>MatMul后接激活函数</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="十、总结"><a href="#十、总结" class="headerlink" title="十、总结"></a>十、总结</h2><p>本文通过四个渐进式示例，带你快速入门了DVM的核心使用方式：</p>
+<ol>
+<li><strong>Hello World</strong>：掌握了基本的Load&#x2F;Add&#x2F;Store操作</li>
+<li><strong>BatchNorm</strong>：学会了多算子融合和Reduce操作</li>
+<li><strong>Attention</strong>：理解了MatMul和Softmax的组合使用</li>
+<li><strong>MatMul后融合</strong>：体验了Cube和Vector的混合融合</li>
+</ol>
+<h3 id="关键要点"><a href="#关键要点" class="headerlink" title="关键要点"></a>关键要点</h3><ol>
+<li><strong>装饰器模式</strong>：<code>@dvm.kernel</code>自动处理编译执行流程</li>
+<li><strong>元算子构图</strong>：通过Load&#x2F;Store&#x2F;计算API构建计算图</li>
+<li><strong>动态Shape</strong>：天然支持，无需特殊处理</li>
+<li><strong>自动融合</strong>：多个操作自动融合为单一Kernel</li>
+</ol>
+<h3 id="下一步学习"><a href="#下一步学习" class="headerlink" title="下一步学习"></a>下一步学习</h3><ul>
+<li>深入理解Kernel对象的内部实现</li>
+<li>学习Tiling策略和字节码生成</li>
+<li>探索虚拟机的执行机制</li>
+<li>研究图优化Pass的实现</li>
+</ul>
+<p>DVM为AI算子优化提供了一个强大而灵活的平台，希望本文能帮助你快速上手，在实际项目中发挥其价值。</p>
+<hr>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://gitcode.com/mindspore/dvm">DVM官方仓库</a></li>
+<li><a href="../docs/tutorial.md">用户开发指南</a></li>
+<li><a href="../examples/">示例代码</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/myblog/2026/05/19/02_DVM_Python%E6%8E%A5%E5%8F%A3%E8%AF%A6%E8%A7%A3%E4%B8%8E%E5%AE%9E%E6%88%98/" rel="prev" title="DVM Python接口详解与实战">
+                  <i class="fa fa-angle-left"></i> DVM Python接口详解与实战
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2025 – 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">chujinjin</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>
