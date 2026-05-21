@@ -138,7 +138,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/myblog/archives/">
-          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-count">13</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -168,6 +168,831 @@
     </div>
 
     <div class="main-inner index posts-expand">
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://chujinjin101.github.io/myblog/2026/05/21/vllm-learning-plan/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/myblog/images/mine.png">
+      <meta itemprop="name" content="chujinjin">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="chu的技术博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content=" | chu的技术博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/myblog/2026/05/21/vllm-learning-plan/" class="post-title-link" itemprop="url">vllm_learning_plan</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2026-05-21 17:31:28 / 修改时间：17:31:40" itemprop="dateCreated datePublished" datetime="2026-05-21T17:31:28+08:00">2026-05-21</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h1 id="vLLM-项目学习计划"><a href="#vLLM-项目学习计划" class="headerlink" title="vLLM 项目学习计划"></a>vLLM 项目学习计划</h1><blockquote>
+<p>本计划面向希望深入理解 vLLM 推理引擎的开发者，从入门到精通分为 <strong>8 个阶段</strong>，预计总学习时间 <strong>10-12 周</strong>（每天 2-3 小时）。</p>
+</blockquote>
+<hr>
+<h2 id="阶段一：项目概览与环境搭建（第-1-周，约-7-小时）"><a href="#阶段一：项目概览与环境搭建（第-1-周，约-7-小时）" class="headerlink" title="阶段一：项目概览与环境搭建（第 1 周，约 7 小时）"></a>阶段一：项目概览与环境搭建（第 1 周，约 7 小时）</h2><h3 id="学习目标"><a href="#学习目标" class="headerlink" title="学习目标"></a>学习目标</h3><ul>
+<li>理解 vLLM 项目的定位、核心特性和应用场景</li>
+<li>搭建开发环境，能运行基本推理示例</li>
+</ul>
+<h3 id="知识点"><a href="#知识点" class="headerlink" title="知识点"></a>知识点</h3><table>
+<thead>
+<tr>
+<th>知识点</th>
+<th>说明</th>
+<th>推荐时间</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>项目定位与核心特性</td>
+<td>PagedAttention、连续批处理、量化、推测解码等</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>仓库结构概览</td>
+<td>顶层目录、核心模块划分、双引擎架构</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>开发环境搭建</td>
+<td>uv + Python 3.12 + PyTorch + vLLM 源码安装</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>快速上手推理</td>
+<td>离线推理 LLM 类 + OpenAI 兼容服务</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>贡献流程</td>
+<td>AGENTS.md、CONTRIBUTING.md、pre-commit</td>
+<td>1h</td>
+</tr>
+</tbody></table>
+<h3 id="推荐操作"><a href="#推荐操作" class="headerlink" title="推荐操作"></a>推荐操作</h3><ol>
+<li>阅读 <a href="file:///home/cjj/vllm/README.md">README.md</a>，了解项目全貌</li>
+<li>浏览仓库目录结构，建立整体认知</li>
+<li>按以下步骤搭建环境：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">curl -LsSf https://astral.sh/uv/install.sh | sh</span><br><span class="line">uv venv --python 3.12</span><br><span class="line"><span class="built_in">source</span> .venv/bin/activate</span><br><span class="line">uv pip install -r requirements/lint.txt</span><br><span class="line">pre-commit install</span><br><span class="line">VLLM_USE_PRECOMPILED=1 uv pip install -e . --torch-backend=auto</span><br></pre></td></tr></table></figure></li>
+<li>运行基础示例：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 离线推理</span></span><br><span class="line">.venv/bin/python examples/basic/offline_inference/generate.py</span><br><span class="line"><span class="comment"># 在线服务</span></span><br><span class="line">.venv/bin/python -m vllm.entrypoints.openai.api_server --model facebook/opt-125m</span><br></pre></td></tr></table></figure></li>
+<li>阅读 <a href="file:///home/cjj/vllm/docs/getting_started/quickstart.md">docs&#x2F;getting_started&#x2F;quickstart.md</a></li>
+</ol>
+<h3 id="关键文件"><a href="#关键文件" class="headerlink" title="关键文件"></a>关键文件</h3><ul>
+<li><a href="file:///home/cjj/vllm/README.md">README.md</a></li>
+<li><a href="file:///home/cjj/vllm/AGENTS.md">AGENTS.md</a></li>
+<li><a href="file:///home/cjj/vllm/CONTRIBUTING.md">CONTRIBUTING.md</a></li>
+<li><a href="file:///home/cjj/vllm/examples/basic">examples&#x2F;basic&#x2F;</a></li>
+<li><a href="file:///home/cjj/vllm/docs/getting_started">docs&#x2F;getting_started&#x2F;</a></li>
+</ul>
+<hr>
+<h2 id="阶段二：架构总览与核心概念（第-2-周，约-10-小时）"><a href="#阶段二：架构总览与核心概念（第-2-周，约-10-小时）" class="headerlink" title="阶段二：架构总览与核心概念（第 2 周，约 10 小时）"></a>阶段二：架构总览与核心概念（第 2 周，约 10 小时）</h2><h3 id="学习目标-1"><a href="#学习目标-1" class="headerlink" title="学习目标"></a>学习目标</h3><ul>
+<li>理解 vLLM 的整体架构分层</li>
+<li>掌握请求从提交到返回的完整数据流</li>
+<li>理解 V1 引擎的设计动机和架构</li>
+</ul>
+<h3 id="知识点-1"><a href="#知识点-1" class="headerlink" title="知识点"></a>知识点</h3><table>
+<thead>
+<tr>
+<th>知识点</th>
+<th>说明</th>
+<th>推荐时间</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>架构分层</td>
+<td>入口层→引擎层→调度层→执行层→Worker层→模型层→内核层→平台层</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>入口点体系</td>
+<td>CLI &#x2F; Python API (LLM) &#x2F; HTTP API (OpenAI) &#x2F; gRPC</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>V1 引擎架构</td>
+<td>AsyncLLM + EngineCore + ZMQ 通信</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>请求完整生命周期</td>
+<td>从 generate() 到 RequestOutput 的端到端流程</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>多进程架构</td>
+<td>API 进程 + EngineCore 后台进程 + Worker 进程</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>配置系统</td>
+<td>VllmConfig + 28 个子配置模块</td>
+<td>2h</td>
+</tr>
+</tbody></table>
+<h3 id="推荐操作-1"><a href="#推荐操作-1" class="headerlink" title="推荐操作"></a>推荐操作</h3><ol>
+<li><strong>精读</strong> <a href="file:///home/cjj/vllm/docs/design/arch_overview.md">docs&#x2F;design&#x2F;arch_overview.md</a>（最重要的一篇文档）</li>
+<li><strong>精读</strong> <a href="file:///home/cjj/vllm/docs/design/multiprocessing.md">docs&#x2F;design&#x2F;multiprocessing.md</a></li>
+<li>阅读入口点代码：<ul>
+<li><a href="file:///home/cjj/vllm/vllm/entrypoints/llm.py">vllm&#x2F;entrypoints&#x2F;llm.py</a> — LLM 类</li>
+<li><a href="file:///home/cjj/vllm/vllm/entrypoints/openai/api_server.py">vllm&#x2F;entrypoints&#x2F;openai&#x2F;api_server.py</a> — API 服务器</li>
+<li><a href="file:///home/cjj/vllm/vllm/entrypoints/cli/main.py">vllm&#x2F;entrypoints&#x2F;cli&#x2F;main.py</a> — CLI 入口</li>
+</ul>
+</li>
+<li>阅读 V1 引擎核心代码：<ul>
+<li><a href="file:///home/cjj/vllm/vllm/v1/engine/async_llm.py">vllm&#x2F;v1&#x2F;engine&#x2F;async_llm.py</a> — AsyncLLM</li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/engine/core.py">vllm&#x2F;v1&#x2F;engine&#x2F;core.py</a> — EngineCore</li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/engine/core_client.py">vllm&#x2F;v1&#x2F;engine&#x2F;core_client.py</a> — 通信客户端</li>
+</ul>
+</li>
+<li>画一张请求流转图，标注关键类和方法</li>
+<li>阅读 <a href="file:///home/cjj/vllm/docs/configuration/README.md">docs&#x2F;configuration&#x2F;README.md</a> 和 <a href="file:///home/cjj/vllm/docs/configuration/engine_args.md">docs&#x2F;configuration&#x2F;engine_args.md</a></li>
+</ol>
+<h3 id="关键文件-1"><a href="#关键文件-1" class="headerlink" title="关键文件"></a>关键文件</h3><ul>
+<li><a href="file:///home/cjj/vllm/vllm/v1/engine/async_llm.py">vllm&#x2F;v1&#x2F;engine&#x2F;async_llm.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/engine/core.py">vllm&#x2F;v1&#x2F;engine&#x2F;core.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/engine/core_client.py">vllm&#x2F;v1&#x2F;engine&#x2F;core_client.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/engine/input_processor.py">vllm&#x2F;v1&#x2F;engine&#x2F;input_processor.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/engine/output_processor.py">vllm&#x2F;v1&#x2F;engine&#x2F;output_processor.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/config/vllm.py">vllm&#x2F;config&#x2F;vllm.py</a></li>
+</ul>
+<hr>
+<h2 id="阶段三：PagedAttention-与-KV-Cache-管理（第-3-4-周，约-16-小时）"><a href="#阶段三：PagedAttention-与-KV-Cache-管理（第-3-4-周，约-16-小时）" class="headerlink" title="阶段三：PagedAttention 与 KV Cache 管理（第 3-4 周，约 16 小时）"></a>阶段三：PagedAttention 与 KV Cache 管理（第 3-4 周，约 16 小时）</h2><h3 id="学习目标-2"><a href="#学习目标-2" class="headerlink" title="学习目标"></a>学习目标</h3><ul>
+<li>深入理解 PagedAttention 的核心思想和实现</li>
+<li>掌握 KV Cache 的块分配、释放、前缀缓存机制</li>
+<li>理解调度器如何与 KV Cache 管理器协作</li>
+</ul>
+<h3 id="知识点-2"><a href="#知识点-2" class="headerlink" title="知识点"></a>知识点</h3><table>
+<thead>
+<tr>
+<th>知识点</th>
+<th>说明</th>
+<th>推荐时间</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>PagedAttention 原理</td>
+<td>虚拟内存分页类比、块式 KV cache、内存碎片消除</td>
+<td>3h</td>
+</tr>
+<tr>
+<td>KV Cache 内存布局</td>
+<td>k_cache&#x2F;v_cache 的 5D 张量形状</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>BlockPool 与块管理</td>
+<td>空闲块队列(LRU)、引用计数、哈希查找</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>前缀缓存 (APC)</td>
+<td>块哈希、最长前缀匹配、共享块引用计数</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>KV Cache 类型</td>
+<td>FullAttention&#x2F;SlidingWindow&#x2F;MLA&#x2F;Mamba&#x2F;ChunkedLocal</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>KV Connector</td>
+<td>分布式 KV 传输、Prefill&#x2F;Decode 分离、异步加载</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>抢占与驱逐</td>
+<td>KV cache 不足时的抢占策略、请求重计算</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>混合 KV Cache 管理</td>
+<td>KVCacheCoordinator + SingleTypeKVCacheManager</td>
+<td>2h</td>
+</tr>
+</tbody></table>
+<h3 id="推荐操作-2"><a href="#推荐操作-2" class="headerlink" title="推荐操作"></a>推荐操作</h3><ol>
+<li><strong>精读</strong> <a href="file:///home/cjj/vllm/docs/design/paged_attention.md">docs&#x2F;design&#x2F;paged_attention.md</a></li>
+<li><strong>精读</strong> <a href="file:///home/cjj/vllm/docs/design/prefix_caching.md">docs&#x2F;design&#x2F;prefix_caching.md</a></li>
+<li><strong>精读</strong> <a href="file:///home/cjj/vllm/docs/design/hybrid_kv_cache_manager.md">docs&#x2F;design&#x2F;hybrid_kv_cache_manager.md</a></li>
+<li>阅读 KV Cache 管理核心代码：<ul>
+<li><a href="file:///home/cjj/vllm/vllm/v1/core/kv_cache_manager.py">vllm&#x2F;v1&#x2F;core&#x2F;kv_cache_manager.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/core/block_pool.py">vllm&#x2F;v1&#x2F;core&#x2F;block_pool.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/core/kv_cache_utils.py">vllm&#x2F;v1&#x2F;core&#x2F;kv_cache_utils.py</a></li>
+</ul>
+</li>
+<li>阅读 CUDA 内核实现（选读）：<ul>
+<li><a href="file:///home/cjj/vllm/csrc/attention/paged_attention_v2.cu">csrc&#x2F;attention&#x2F;paged_attention_v2.cu</a></li>
+</ul>
+</li>
+<li>运行前缀缓存示例：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.venv/bin/python examples/features/automatic_prefix_caching/</span><br></pre></td></tr></table></figure></li>
+<li>阅读 KV Connector 代码：<ul>
+<li><a href="file:///home/cjj/vllm/vllm/v1/worker/gpu/kv_connector.py">vllm&#x2F;v1&#x2F;worker&#x2F;gpu&#x2F;kv_connector.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/distributed/kv_transfer">vllm&#x2F;distributed&#x2F;kv_transfer&#x2F;</a></li>
+</ul>
+</li>
+<li>阅读混合 KV Cache 文档：<a href="file:///home/cjj/vllm/docs/design/hybrid_kv_cache_manager.md">docs&#x2F;design&#x2F;hybrid_kv_cache_manager.md</a></li>
+</ol>
+<h3 id="关键文件-2"><a href="#关键文件-2" class="headerlink" title="关键文件"></a>关键文件</h3><ul>
+<li><a href="file:///home/cjj/vllm/vllm/v1/core/kv_cache_manager.py">vllm&#x2F;v1&#x2F;core&#x2F;kv_cache_manager.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/core/block_pool.py">vllm&#x2F;v1&#x2F;core&#x2F;block_pool.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/core/kv_cache_utils.py">vllm&#x2F;v1&#x2F;core&#x2F;kv_cache_utils.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/kv_cache_interface.py">vllm&#x2F;v1&#x2F;kv_cache_interface.py</a></li>
+<li><a href="file:///home/cjj/vllm/csrc/attention">csrc&#x2F;attention&#x2F;</a></li>
+</ul>
+<hr>
+<h2 id="阶段四：调度器与请求管理（第-4-5-周，约-10-小时）"><a href="#阶段四：调度器与请求管理（第-4-5-周，约-10-小时）" class="headerlink" title="阶段四：调度器与请求管理（第 4-5 周，约 10 小时）"></a>阶段四：调度器与请求管理（第 4-5 周，约 10 小时）</h2><h3 id="学习目标-3"><a href="#学习目标-3" class="headerlink" title="学习目标"></a>学习目标</h3><ul>
+<li>理解 V1 统一调度算法（基于 computed tokens 追赶模型）</li>
+<li>掌握请求状态机（WAITING → RUNNING → FINISHED）</li>
+<li>理解调度约束和抢占机制</li>
+</ul>
+<h3 id="知识点-3"><a href="#知识点-3" class="headerlink" title="知识点"></a>知识点</h3><table>
+<thead>
+<tr>
+<th>知识点</th>
+<th>说明</th>
+<th>推荐时间</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>统一调度算法</td>
+<td>无传统 prefill&#x2F;decode 分离，基于 num_computed_tokens 追赶</td>
+<td>3h</td>
+</tr>
+<tr>
+<td>请求状态机</td>
+<td>WAITING&#x2F;RUNNING&#x2F;PREEMPTED&#x2F;FINISHED&#x2F;SWAPPED 等状态</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>调度约束</td>
+<td>max_num_running_reqs, max_num_scheduled_tokens, KV 块可用性</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>抢占策略</td>
+<td>最低优先级抢占、全量重计算 vs 增量重计算</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>请求队列管理</td>
+<td>FCFS&#x2F;PRIORITY 策略、skipped_waiting 机制</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>输出更新</td>
+<td>update_from_output() 处理采样结果、停止条件、投机解码</td>
+<td>1h</td>
+</tr>
+</tbody></table>
+<h3 id="推荐操作-3"><a href="#推荐操作-3" class="headerlink" title="推荐操作"></a>推荐操作</h3><ol>
+<li><strong>精读</strong> <a href="file:///home/cjj/vllm/vllm/v1/core/sched/scheduler.py">vllm&#x2F;v1&#x2F;core&#x2F;sched&#x2F;scheduler.py</a>（核心文件，约 1600 行）<ul>
+<li>重点阅读 <code>schedule()</code> 方法（L329-L922）</li>
+<li>重点阅读 <code>update_from_output()</code> 方法（L1283-L1603）</li>
+</ul>
+</li>
+<li>阅读请求定义：<a href="file:///home/cjj/vllm/vllm/v1/core/req">vllm&#x2F;v1&#x2F;core&#x2F;req&#x2F;</a></li>
+<li>阅读调度器配置：<a href="file:///home/cjj/vllm/vllm/config/scheduler.py">vllm&#x2F;config&#x2F;scheduler.py</a></li>
+<li>运行调度器相关测试：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.venv/bin/python -m pytest tests/v1/core/ -v -k scheduler</span><br></pre></td></tr></table></figure></li>
+<li>尝试修改调度参数（如 max_num_running_reqs），观察行为变化</li>
+</ol>
+<h3 id="关键文件-3"><a href="#关键文件-3" class="headerlink" title="关键文件"></a>关键文件</h3><ul>
+<li><a href="file:///home/cjj/vllm/vllm/v1/core/sched/scheduler.py">vllm&#x2F;v1&#x2F;core&#x2F;sched&#x2F;scheduler.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/core/sched/async_scheduler.py">vllm&#x2F;v1&#x2F;core&#x2F;sched&#x2F;async_scheduler.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/core/req">vllm&#x2F;v1&#x2F;core&#x2F;req&#x2F;</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/config/scheduler.py">vllm&#x2F;config&#x2F;scheduler.py</a></li>
+</ul>
+<hr>
+<h2 id="阶段五：模型执行与注意力后端（第-5-7-周，约-18-小时）"><a href="#阶段五：模型执行与注意力后端（第-5-7-周，约-18-小时）" class="headerlink" title="阶段五：模型执行与注意力后端（第 5-7 周，约 18 小时）"></a>阶段五：模型执行与注意力后端（第 5-7 周，约 18 小时）</h2><h3 id="学习目标-4"><a href="#学习目标-4" class="headerlink" title="学习目标"></a>学习目标</h3><ul>
+<li>理解 GPU ModelRunner 的推理循环</li>
+<li>掌握注意力后端的可插拔架构</li>
+<li>理解 CUDA Graph 优化机制</li>
+<li>了解模型注册与加载流程</li>
+</ul>
+<h3 id="知识点-4"><a href="#知识点-4" class="headerlink" title="知识点"></a>知识点</h3><table>
+<thead>
+<tr>
+<th>知识点</th>
+<th>说明</th>
+<th>推荐时间</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GPU ModelRunner</td>
+<td>推理循环、输入批处理、CUDA Graph 捕获</td>
+<td>3h</td>
+</tr>
+<tr>
+<td>注意力后端架构</td>
+<td>AttentionBackend 抽象 + FlashAttn&#x2F;FlashInfer&#x2F;Triton 等</td>
+<td>3h</td>
+</tr>
+<tr>
+<td>FlashAttention</td>
+<td>最主流的注意力后端，FlashAttention 2&#x2F;3</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>FlashInfer</td>
+<td>高性能注意力库，支持 batch prefill&#x2F;decode</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>MLA 注意力</td>
+<td>DeepSeek 的 Multi-head Latent Attention</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>CUDA Graphs</td>
+<td>消除 CPU 开销、图捕获与重放</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>模型注册与加载</td>
+<td>ModelRegistry、模型权重加载器</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>torch.compile 集成</td>
+<td>分段编译、编译优化级别</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>InputBatch</td>
+<td>批处理数据结构、block_table 管理</td>
+<td>1h</td>
+</tr>
+</tbody></table>
+<h3 id="推荐操作-4"><a href="#推荐操作-4" class="headerlink" title="推荐操作"></a>推荐操作</h3><ol>
+<li><strong>精读</strong> <a href="file:///home/cjj/vllm/docs/design/attention_backends.md">docs&#x2F;design&#x2F;attention_backends.md</a></li>
+<li><strong>精读</strong> <a href="file:///home/cjj/vllm/docs/design/cuda_graphs.md">docs&#x2F;design&#x2F;cuda_graphs.md</a></li>
+<li><strong>精读</strong> <a href="file:///home/cjj/vllm/docs/design/model_runner_v2.md">docs&#x2F;design&#x2F;model_runner_v2.md</a></li>
+<li><strong>精读</strong> <a href="file:///home/cjj/vllm/docs/design/torch_compile.md">docs&#x2F;design&#x2F;torch_compile.md</a></li>
+<li>阅读 GPU ModelRunner 代码：<ul>
+<li><a href="file:///home/cjj/vllm/vllm/v1/worker/gpu/model_runner.py">vllm&#x2F;v1&#x2F;worker&#x2F;gpu&#x2F;model_runner.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/worker/gpu/input_batch.py">vllm&#x2F;v1&#x2F;worker&#x2F;gpu&#x2F;input_batch.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/worker/gpu/block_table.py">vllm&#x2F;v1&#x2F;worker&#x2F;gpu&#x2F;block_table.py</a></li>
+</ul>
+</li>
+<li>阅读注意力后端代码：<ul>
+<li><a href="file:///home/cjj/vllm/vllm/v1/attention/backend.py">vllm&#x2F;v1&#x2F;attention&#x2F;backend.py</a> — 抽象基类</li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/attention/backends/flash_attn.py">vllm&#x2F;v1&#x2F;attention&#x2F;backends&#x2F;flash_attn.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/attention/backends/flashinfer.py">vllm&#x2F;v1&#x2F;attention&#x2F;backends&#x2F;flashinfer.py</a></li>
+</ul>
+</li>
+<li>阅读模型注册代码：<ul>
+<li><a href="file:///home/cjj/vllm/vllm/model_executor/models/registry.py">vllm&#x2F;model_executor&#x2F;models&#x2F;registry.py</a></li>
+</ul>
+</li>
+<li>阅读一个具体模型实现（如 Llama）：<ul>
+<li><a href="file:///home/cjj/vllm/vllm/model_executor/models/llama.py">vllm&#x2F;model_executor&#x2F;models&#x2F;llama.py</a></li>
+</ul>
+</li>
+<li>阅读 HuggingFace 集成文档：<a href="file:///home/cjj/vllm/docs/design/huggingface_integration.md">docs&#x2F;design&#x2F;huggingface_integration.md</a></li>
+</ol>
+<h3 id="关键文件-4"><a href="#关键文件-4" class="headerlink" title="关键文件"></a>关键文件</h3><ul>
+<li><a href="file:///home/cjj/vllm/vllm/v1/worker/gpu/model_runner.py">vllm&#x2F;v1&#x2F;worker&#x2F;gpu&#x2F;model_runner.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/attention/backend.py">vllm&#x2F;v1&#x2F;attention&#x2F;backend.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/attention/backends/flash_attn.py">vllm&#x2F;v1&#x2F;attention&#x2F;backends&#x2F;flash_attn.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/attention/backends/flashinfer.py">vllm&#x2F;v1&#x2F;attention&#x2F;backends&#x2F;flashinfer.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/model_executor/models/llama.py">vllm&#x2F;model_executor&#x2F;models&#x2F;llama.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/model_executor/models/registry.py">vllm&#x2F;model_executor&#x2F;models&#x2F;registry.py</a></li>
+</ul>
+<hr>
+<h2 id="阶段六：采样、推测解码与高级特性（第-7-8-周，约-12-小时）"><a href="#阶段六：采样、推测解码与高级特性（第-7-8-周，约-12-小时）" class="headerlink" title="阶段六：采样、推测解码与高级特性（第 7-8 周，约 12 小时）"></a>阶段六：采样、推测解码与高级特性（第 7-8 周，约 12 小时）</h2><h3 id="学习目标-5"><a href="#学习目标-5" class="headerlink" title="学习目标"></a>学习目标</h3><ul>
+<li>理解采样管线和 logits 处理流程</li>
+<li>掌握推测解码的原理和实现</li>
+<li>了解量化、LoRA、结构化输出等高级特性</li>
+</ul>
+<h3 id="知识点-5"><a href="#知识点-5" class="headerlink" title="知识点"></a>知识点</h3><table>
+<thead>
+<tr>
+<th>知识点</th>
+<th>说明</th>
+<th>推荐时间</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>采样管线</td>
+<td>logits→惩罚→temperature→top_k&#x2F;p→采样</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>推测解码原理</td>
+<td>draft-verify 范式、接受&#x2F;拒绝采样</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>EAGLE 推测解码</td>
+<td>自回归投机、特征注入</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>N-gram &#x2F; 后缀解码</td>
+<td>无需 draft model 的推测解码</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>量化方案</td>
+<td>FP8&#x2F;INT8&#x2F;INT4&#x2F;GPTQ&#x2F;AWQ&#x2F;GGUF&#x2F;BNB 等 20+ 种</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>LoRA</td>
+<td>多 LoRA 适配器管理、动态切换</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>结构化输出</td>
+<td>JSON Schema &#x2F; Regex 约束、grammar bitmask</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>多模态处理</td>
+<td>图像&#x2F;音频&#x2F;视频输入处理管线</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>工具调用</td>
+<td>Function Calling、40+ 工具解析器</td>
+<td>1h</td>
+</tr>
+</tbody></table>
+<h3 id="推荐操作-5"><a href="#推荐操作-5" class="headerlink" title="推荐操作"></a>推荐操作</h3><ol>
+<li>阅读采样器代码：<ul>
+<li><a href="file:///home/cjj/vllm/vllm/v1/sample/sampler.py">vllm&#x2F;v1&#x2F;sample&#x2F;sampler.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/worker/gpu/sample/sampler.py">vllm&#x2F;v1&#x2F;worker&#x2F;gpu&#x2F;sample&#x2F;sampler.py</a></li>
+</ul>
+</li>
+<li>阅读推测解码代码和文档：<ul>
+<li><a href="file:///home/cjj/vllm/docs/features/speculative_decoding/README.md">docs&#x2F;features&#x2F;speculative_decoding&#x2F;README.md</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/spec_decode">vllm&#x2F;v1&#x2F;spec_decode&#x2F;</a></li>
+</ul>
+</li>
+<li>运行推测解码示例：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.venv/bin/python examples/features/speculative_decoding/</span><br></pre></td></tr></table></figure></li>
+<li>阅读量化文档：<ul>
+<li><a href="file:///home/cjj/vllm/docs/features/quantization/README.md">docs&#x2F;features&#x2F;quantization&#x2F;README.md</a></li>
+<li><a href="file:///home/cjj/vllm/docs/features/quantization/fp8.md">docs&#x2F;features&#x2F;quantization&#x2F;fp8.md</a></li>
+</ul>
+</li>
+<li>阅读 LoRA 文档和代码：<ul>
+<li><a href="file:///home/cjj/vllm/docs/features/lora.md">docs&#x2F;features&#x2F;lora.md</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/lora">vllm&#x2F;lora&#x2F;</a></li>
+</ul>
+</li>
+<li>阅读结构化输出文档：<ul>
+<li><a href="file:///home/cjj/vllm/docs/features/structured_outputs.md">docs&#x2F;features&#x2F;structured_outputs.md</a></li>
+</ul>
+</li>
+<li>阅读多模态处理文档：<ul>
+<li><a href="file:///home/cjj/vllm/docs/design/mm_processing.md">docs&#x2F;design&#x2F;mm_processing.md</a></li>
+</ul>
+</li>
+</ol>
+<h3 id="关键文件-5"><a href="#关键文件-5" class="headerlink" title="关键文件"></a>关键文件</h3><ul>
+<li><a href="file:///home/cjj/vllm/vllm/v1/sample/sampler.py">vllm&#x2F;v1&#x2F;sample&#x2F;sampler.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/spec_decode">vllm&#x2F;v1&#x2F;spec_decode&#x2F;</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/model_executor/layers/quantization">vllm&#x2F;model_executor&#x2F;layers&#x2F;quantization&#x2F;</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/lora">vllm&#x2F;lora&#x2F;</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/structured_output">vllm&#x2F;v1&#x2F;structured_output&#x2F;</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/multimodal">vllm&#x2F;multimodal&#x2F;</a></li>
+</ul>
+<hr>
+<h2 id="阶段七：分布式与部署（第-9-10-周，约-12-小时）"><a href="#阶段七：分布式与部署（第-9-10-周，约-12-小时）" class="headerlink" title="阶段七：分布式与部署（第 9-10 周，约 12 小时）"></a>阶段七：分布式与部署（第 9-10 周，约 12 小时）</h2><h3 id="学习目标-6"><a href="#学习目标-6" class="headerlink" title="学习目标"></a>学习目标</h3><ul>
+<li>理解张量并行(TP)、流水线并行(PP)、数据并行(DP)、专家并行(EP)</li>
+<li>掌握分布式执行器架构</li>
+<li>了解生产部署方案</li>
+</ul>
+<h3 id="知识点-6"><a href="#知识点-6" class="headerlink" title="知识点"></a>知识点</h3><table>
+<thead>
+<tr>
+<th>知识点</th>
+<th>说明</th>
+<th>推荐时间</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>张量并行 (TP)</td>
+<td>模型按层切分到多 GPU</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>流水线并行 (PP)</td>
+<td>模型按阶段切分</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>数据并行 (DP)</td>
+<td>请求级数据并行</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>专家并行 (EP)</td>
+<td>MoE 模型的专家切分</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>上下文并行 (CP)</td>
+<td>长序列上下文切分</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>执行器架构</td>
+<td>UniProc &#x2F; MultiProc &#x2F; Ray 执行器</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>分离式预填充</td>
+<td>Prefill&#x2F;Decode 分离部署</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>Docker&#x2F;K8s 部署</td>
+<td>生产环境部署方案</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>性能调优</td>
+<td>内存节省、优化配置、基准测试</td>
+<td>1h</td>
+</tr>
+</tbody></table>
+<h3 id="推荐操作-6"><a href="#推荐操作-6" class="headerlink" title="推荐操作"></a>推荐操作</h3><ol>
+<li>阅读并行文档：<ul>
+<li><a href="file:///home/cjj/vllm/docs/serving/parallelism_scaling.md">docs&#x2F;serving&#x2F;parallelism_scaling.md</a></li>
+<li><a href="file:///home/cjj/vllm/docs/serving/data_parallel_deployment.md">docs&#x2F;serving&#x2F;data_parallel_deployment.md</a></li>
+<li><a href="file:///home/cjj/vllm/docs/serving/expert_parallel_deployment.md">docs&#x2F;serving&#x2F;expert_parallel_deployment.md</a></li>
+</ul>
+</li>
+<li>阅读执行器代码：<ul>
+<li><a href="file:///home/cjj/vllm/vllm/v1/executor/abstract.py">vllm&#x2F;v1&#x2F;executor&#x2F;abstract.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/executor/uniproc_executor.py">vllm&#x2F;v1&#x2F;executor&#x2F;uniproc_executor.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/v1/executor/multiproc_executor.py">vllm&#x2F;v1&#x2F;executor&#x2F;multiproc_executor.py</a></li>
+</ul>
+</li>
+<li>阅读分布式通信代码：<ul>
+<li><a href="file:///home/cjj/vllm/vllm/distributed/parallel_state.py">vllm&#x2F;distributed&#x2F;parallel_state.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/distributed/communication_op.py">vllm&#x2F;distributed&#x2F;communication_op.py</a></li>
+</ul>
+</li>
+<li>阅读分离式预填充文档：<ul>
+<li><a href="file:///home/cjj/vllm/docs/features/disagg_prefill.md">docs&#x2F;features&#x2F;disagg_prefill.md</a></li>
+</ul>
+</li>
+<li>运行分布式示例（需多 GPU）：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.venv/bin/python examples/features/torchrun/</span><br></pre></td></tr></table></figure></li>
+<li>阅读部署文档：<ul>
+<li><a href="file:///home/cjj/vllm/docs/deployment/docker.md">docs&#x2F;deployment&#x2F;docker.md</a></li>
+<li><a href="file:///home/cjj/vllm/docs/deployment/k8s.md">docs&#x2F;deployment&#x2F;k8s.md</a></li>
+</ul>
+</li>
+<li>运行基准测试：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">.venv/bin/python -m vllm bench latency --model facebook/opt-125m</span><br><span class="line">.venv/bin/python -m vllm bench throughput --model facebook/opt-125m</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h3 id="关键文件-6"><a href="#关键文件-6" class="headerlink" title="关键文件"></a>关键文件</h3><ul>
+<li><a href="file:///home/cjj/vllm/vllm/v1/executor">vllm&#x2F;v1&#x2F;executor&#x2F;</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/distributed/parallel_state.py">vllm&#x2F;distributed&#x2F;parallel_state.py</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/distributed/kv_transfer">vllm&#x2F;distributed&#x2F;kv_transfer&#x2F;</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/config/parallel.py">vllm&#x2F;config&#x2F;parallel.py</a></li>
+</ul>
+<hr>
+<h2 id="阶段八：内核优化与深度定制（第-10-12-周，约-14-小时）"><a href="#阶段八：内核优化与深度定制（第-10-12-周，约-14-小时）" class="headerlink" title="阶段八：内核优化与深度定制（第 10-12 周，约 14 小时）"></a>阶段八：内核优化与深度定制（第 10-12 周，约 14 小时）</h2><h3 id="学习目标-7"><a href="#学习目标-7" class="headerlink" title="学习目标"></a>学习目标</h3><ul>
+<li>理解 CUDA&#x2F;Triton 内核的设计与优化</li>
+<li>掌握自定义算子注册机制</li>
+<li>了解 MoE 融合内核</li>
+<li>能够为 vLLM 贡献代码</li>
+</ul>
+<h3 id="知识点-7"><a href="#知识点-7" class="headerlink" title="知识点"></a>知识点</h3><table>
+<thead>
+<tr>
+<th>知识点</th>
+<th>说明</th>
+<th>推荐时间</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CUDA 内核基础</td>
+<td>Paged Attention 内核、采样器内核</td>
+<td>3h</td>
+</tr>
+<tr>
+<td>Triton 内核</td>
+<td>Python 层内核、Helion 集成</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>自定义算子注册</td>
+<td>custom_op 机制、torch.library 集成</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>算子融合</td>
+<td>融合 MoE、融合激活函数、RMSNorm</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>MoE 内核</td>
+<td>topk 路由、专家计算、Marlin 量化</td>
+<td>2h</td>
+</tr>
+<tr>
+<td>平台抽象层</td>
+<td>CUDA&#x2F;ROCm&#x2F;CPU&#x2F;XPU&#x2F;TPU 适配</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>插件系统</td>
+<td>LoRA 解析器插件、IO 处理器插件</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>贡献实践</td>
+<td>添加新模型、编写测试、提交 PR</td>
+<td>1h</td>
+</tr>
+</tbody></table>
+<h3 id="推荐操作-7"><a href="#推荐操作-7" class="headerlink" title="推荐操作"></a>推荐操作</h3><ol>
+<li>阅读 CUDA 内核代码（选读，按兴趣）：<ul>
+<li><a href="file:///home/cjj/vllm/csrc/attention/paged_attention_v2.cu">csrc&#x2F;attention&#x2F;paged_attention_v2.cu</a></li>
+<li><a href="file:///home/cjj/vllm/csrc/moe">csrc&#x2F;moe&#x2F;</a></li>
+<li><a href="file:///home/cjj/vllm/csrc/quantization">csrc&#x2F;quantization&#x2F;</a></li>
+</ul>
+</li>
+<li>阅读设计文档：<ul>
+<li><a href="file:///home/cjj/vllm/docs/design/custom_op.md">docs&#x2F;design&#x2F;custom_op.md</a></li>
+<li><a href="file:///home/cjj/vllm/docs/design/fusions.md">docs&#x2F;design&#x2F;fusions.md</a></li>
+<li><a href="file:///home/cjj/vllm/docs/design/fused_moe_modular_kernel.md">docs&#x2F;design&#x2F;fused_moe_modular_kernel.md</a></li>
+<li><a href="file:///home/cjj/vllm/docs/design/plugin_system.md">docs&#x2F;design&#x2F;plugin_system.md</a></li>
+</ul>
+</li>
+<li>阅读平台抽象层：<ul>
+<li><a href="file:///home/cjj/vllm/vllm/platforms">vllm&#x2F;platforms&#x2F;</a></li>
+</ul>
+</li>
+<li>阅读 MoE 层代码：<ul>
+<li><a href="file:///home/cjj/vllm/vllm/model_executor/layers/fused_moe">vllm&#x2F;model_executor&#x2F;layers&#x2F;fused_moe&#x2F;</a></li>
+</ul>
+</li>
+<li>尝试贡献：<ul>
+<li>阅读 <a href="file:///home/cjj/vllm/docs/contributing/model/README.md">docs&#x2F;contributing&#x2F;model&#x2F;README.md</a></li>
+<li>尝试添加一个简单模型或修复一个小 bug</li>
+<li>运行测试验证：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">.venv/bin/python -m pytest tests/v1/ -v -k <span class="string">&quot;test_name&quot;</span></span><br><span class="line">pre-commit run --all-files</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ol>
+<h3 id="关键文件-7"><a href="#关键文件-7" class="headerlink" title="关键文件"></a>关键文件</h3><ul>
+<li><a href="file:///home/cjj/vllm/csrc">csrc&#x2F;</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/model_executor/layers/fused_moe">vllm&#x2F;model_executor&#x2F;layers&#x2F;fused_moe&#x2F;</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/kernels">vllm&#x2F;kernels&#x2F;</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/platforms">vllm&#x2F;platforms&#x2F;</a></li>
+<li><a href="file:///home/cjj/vllm/vllm/plugins">vllm&#x2F;plugins&#x2F;</a></li>
+</ul>
+<hr>
+<h2 id="学习时间总览"><a href="#学习时间总览" class="headerlink" title="学习时间总览"></a>学习时间总览</h2><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>主题</th>
+<th>周次</th>
+<th>预计时间</th>
+<th>难度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>一</td>
+<td>项目概览与环境搭建</td>
+<td>第 1 周</td>
+<td>7h</td>
+<td>⭐</td>
+</tr>
+<tr>
+<td>二</td>
+<td>架构总览与核心概念</td>
+<td>第 2 周</td>
+<td>10h</td>
+<td>⭐⭐</td>
+</tr>
+<tr>
+<td>三</td>
+<td>PagedAttention 与 KV Cache</td>
+<td>第 3-4 周</td>
+<td>16h</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td>四</td>
+<td>调度器与请求管理</td>
+<td>第 4-5 周</td>
+<td>10h</td>
+<td>⭐⭐⭐</td>
+</tr>
+<tr>
+<td>五</td>
+<td>模型执行与注意力后端</td>
+<td>第 5-7 周</td>
+<td>18h</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td>六</td>
+<td>采样、推测解码与高级特性</td>
+<td>第 7-8 周</td>
+<td>12h</td>
+<td>⭐⭐⭐</td>
+</tr>
+<tr>
+<td>七</td>
+<td>分布式与部署</td>
+<td>第 9-10 周</td>
+<td>12h</td>
+<td>⭐⭐⭐</td>
+</tr>
+<tr>
+<td>八</td>
+<td>内核优化与深度定制</td>
+<td>第 10-12 周</td>
+<td>14h</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>总计</strong></td>
+<td></td>
+<td><strong>12 周</strong></td>
+<td><strong>~99h</strong></td>
+<td></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="学习建议"><a href="#学习建议" class="headerlink" title="学习建议"></a>学习建议</h2><h3 id="必读文档优先级"><a href="#必读文档优先级" class="headerlink" title="必读文档优先级"></a>必读文档优先级</h3><ol>
+<li><strong>必读</strong>（阶段 1-4）：arch_overview.md → paged_attention.md → multiprocessing.md → prefix_caching.md</li>
+<li><strong>推荐</strong>（阶段 5-6）：attention_backends.md → cuda_graphs.md → model_runner_v2.md → torch_compile.md</li>
+<li><strong>选读</strong>（阶段 7-8）：按兴趣选择量化&#x2F;分布式&#x2F;内核相关文档</li>
+</ol>
+<h3 id="代码阅读技巧"><a href="#代码阅读技巧" class="headerlink" title="代码阅读技巧"></a>代码阅读技巧</h3><ol>
+<li><strong>自顶向下</strong>：从入口点开始，沿调用链深入</li>
+<li><strong>抓主干</strong>：先理解核心流程，再关注分支逻辑</li>
+<li><strong>画图辅助</strong>：用流程图&#x2F;架构图帮助理解复杂交互</li>
+<li><strong>调试跟踪</strong>：用 <code>pdb</code> 或 <code>logging</code> 跟踪实际执行路径</li>
+<li><strong>测试驱动</strong>：阅读测试代码理解组件行为</li>
+</ol>
+<h3 id="实践建议"><a href="#实践建议" class="headerlink" title="实践建议"></a>实践建议</h3><ol>
+<li>每个阶段都运行对应的示例代码</li>
+<li>尝试修改参数观察行为变化</li>
+<li>阅读测试代码理解预期行为</li>
+<li>尝试修复简单 issue 或添加小功能</li>
+<li>写学习笔记加深理解</li>
+</ol>
+<h3 id="前置知识要求"><a href="#前置知识要求" class="headerlink" title="前置知识要求"></a>前置知识要求</h3><ul>
+<li><strong>必须</strong>：Python、PyTorch 基础、Transformer 架构</li>
+<li><strong>推荐</strong>：CUDA 编程基础、操作系统虚拟内存概念、分布式系统基础</li>
+<li><strong>加分</strong>：Triton 编程、GPU 性能优化经验、FastAPI&#x2F;asyncio</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
 
     
 
@@ -2064,188 +2889,6 @@
 <li><a href="../src/comm.cc">comm.cc</a></li>
 <li><a href="../src/tuning.h">tuning.h</a></li>
 <li><a href="../src/tuning.cc">tuning.cc</a></li>
-</ul>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://chujinjin101.github.io/myblog/2026/05/19/10_DVM%E5%AE%9E%E6%88%98%E6%A1%88%E4%BE%8B%EF%BC%9AAttention%E7%AE%97%E5%AD%90%E4%BC%98%E5%8C%96/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/myblog/images/mine.png">
-      <meta itemprop="name" content="chujinjin">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="chu的技术博客">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | chu的技术博客">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/myblog/2026/05/19/10_DVM%E5%AE%9E%E6%88%98%E6%A1%88%E4%BE%8B%EF%BC%9AAttention%E7%AE%97%E5%AD%90%E4%BC%98%E5%8C%96/" class="post-title-link" itemprop="url">DVM实战案例：Attention算子优化</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-      
-
-      <time title="创建时间：2026-05-19 16:33:04 / 修改时间：19:59:46" itemprop="dateCreated datePublished" datetime="2026-05-19T16:33:04+08:00">2026-05-19</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="DVM实战案例：Attention算子优化"><a href="#DVM实战案例：Attention算子优化" class="headerlink" title="DVM实战案例：Attention算子优化"></a>DVM实战案例：Attention算子优化</h1><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>Attention是Transformer架构的核心组件，其计算复杂度和访存开销对模型性能影响巨大。本文将以Attention算子为例，展示如何使用DVM进行算子优化，涵盖从基础实现到高级优化的完整过程。</p>
-<hr>
-<h2 id="一、Attention算子分析"><a href="#一、Attention算子分析" class="headerlink" title="一、Attention算子分析"></a>一、Attention算子分析</h2><h3 id="1-1-标准Attention公式"><a href="#1-1-标准Attention公式" class="headerlink" title="1.1 标准Attention公式"></a>1.1 标准Attention公式</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Attention(Q, K, V) = softmax(Q @ K^T / sqrt(d_k)) @ V</span><br><span class="line"></span><br><span class="line">其中：</span><br><span class="line">- Q: [batch, seq_len, d_k] 查询矩阵</span><br><span class="line">- K: [batch, seq_len, d_k] 键矩阵</span><br><span class="line">- V: [batch, seq_len, d_v] 值矩阵</span><br><span class="line">- d_k: 查询/键的维度</span><br></pre></td></tr></table></figure>
-
-<h3 id="1-2-计算分解"><a href="#1-2-计算分解" class="headerlink" title="1.2 计算分解"></a>1.2 计算分解</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">步骤1: scores = Q @ K^T          # [batch, seq_len, seq_len]</span><br><span class="line">步骤2: scores = scores / scale   # [batch, seq_len, seq_len]</span><br><span class="line">步骤3: probs = softmax(scores)   # [batch, seq_len, seq_len]</span><br><span class="line">步骤4: output = probs @ V        # [batch, seq_len, d_v]</span><br></pre></td></tr></table></figure>
-
-<h3 id="1-3-性能瓶颈"><a href="#1-3-性能瓶颈" class="headerlink" title="1.3 性能瓶颈"></a>1.3 性能瓶颈</h3><table>
-<thead>
-<tr>
-<th>瓶颈</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>MatMul密集</td>
-<td>两次矩阵乘法，计算量大</td>
-</tr>
-<tr>
-<td>Softmax访存</td>
-<td>需要多次读写scores矩阵</td>
-</tr>
-<tr>
-<td>中间结果大</td>
-<td>scores矩阵为 seq_len × seq_len</td>
-</tr>
-</tbody></table>
-<hr>
-<h2 id="二、基础实现"><a href="#二、基础实现" class="headerlink" title="二、基础实现"></a>二、基础实现</h2><h3 id="2-1-Python实现"><a href="#2-1-Python实现" class="headerlink" title="2.1 Python实现"></a>2.1 Python实现</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> math</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> dvm</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">dvm_softmax</span>(<span class="params">k, x, axis</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;Softmax实现&quot;&quot;&quot;</span></span><br><span class="line">    x = k.cast(x, dvm.float32)</span><br><span class="line">    max_x = k.<span class="built_in">max</span>(x, (axis,), <span class="literal">True</span>)</span><br><span class="line">    x = k.sub(x, max_x)</span><br><span class="line">    exp_x = k.exp(x)</span><br><span class="line">    denom = k.<span class="built_in">sum</span>(exp_x, (axis,), <span class="literal">True</span>)</span><br><span class="line">    out = k.div(exp_x, denom)</span><br><span class="line">    <span class="keyword">return</span> k.cast(out, dvm.float16)</span><br><span class="line"></span><br><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">attention_basic</span>(<span class="params">k, q, k_mat, v, scale</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;基础Attention实现&quot;&quot;&quot;</span></span><br><span class="line">    q = k.load(q, dvm.float16)</span><br><span class="line">    k_mat = k.load(k_mat, dvm.float16)</span><br><span class="line">    v = k.load(v, dvm.float16)</span><br><span class="line">    scale = k.scalar(scale)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Q @ K^T</span></span><br><span class="line">    scores = k.matmul(q, k_mat, <span class="literal">False</span>, <span class="literal">True</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Scale</span></span><br><span class="line">    scores = k.mul(scores, scale)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Softmax</span></span><br><span class="line">    probs = dvm_softmax(k, scores, <span class="number">1</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Probs @ V</span></span><br><span class="line">    output = k.matmul(probs, v, <span class="literal">False</span>, <span class="literal">False</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> k.store(output)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 测试</span></span><br><span class="line">batch, seq_len, d_k, d_v = <span class="number">1</span>, <span class="number">1024</span>, <span class="number">64</span>, <span class="number">64</span></span><br><span class="line">q = np.random.randn(batch, seq_len, d_k).astype(np.float16)</span><br><span class="line">k = np.random.randn(batch, seq_len, d_k).astype(np.float16)</span><br><span class="line">v = np.random.randn(batch, seq_len, d_v).astype(np.float16)</span><br><span class="line">scale = <span class="number">1.0</span> / math.sqrt(d_k)</span><br><span class="line"></span><br><span class="line">output = attention_basic(q, k, v, scale)</span><br></pre></td></tr></table></figure>
-
-<h3 id="2-2-C-实现"><a href="#2-2-C-实现" class="headerlink" title="2.2 C++实现"></a>2.2 C++实现</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;dvm.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">AttentionBasic</span><span class="params">(dvm::Kernel &amp;kernel, <span class="type">void</span> *q, <span class="type">void</span> *k, <span class="type">void</span> *v, <span class="type">void</span> *out,</span></span></span><br><span class="line"><span class="params"><span class="function">                    <span class="type">int64_t</span> batch, <span class="type">int64_t</span> seq_len, <span class="type">int64_t</span> d_k, <span class="type">int64_t</span> d_v,</span></span></span><br><span class="line"><span class="params"><span class="function">                    <span class="type">float</span> scale)</span> </span>&#123;</span><br><span class="line">  std::vector&lt;<span class="type">int64_t</span>&gt; qk_shape = &#123;batch, seq_len, d_k&#125;;</span><br><span class="line">  std::vector&lt;<span class="type">int64_t</span>&gt; v_shape = &#123;batch, seq_len, d_v&#125;;</span><br><span class="line">  std::vector&lt;<span class="type">int64_t</span>&gt; scores_shape = &#123;batch, seq_len, seq_len&#125;;</span><br><span class="line">  </span><br><span class="line">  <span class="function">dvm::IntArrayRef <span class="title">qk_ref</span><span class="params">(qk_shape)</span></span>;</span><br><span class="line">  <span class="function">dvm::IntArrayRef <span class="title">v_ref</span><span class="params">(v_shape)</span></span>;</span><br><span class="line">  <span class="function">dvm::IntArrayRef <span class="title">scores_ref</span><span class="params">(scores_shape)</span></span>;</span><br><span class="line">  </span><br><span class="line">  kernel.<span class="built_in">Reset</span>(dvm::kSplit, dvm::kDynamic);</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// Load</span></span><br><span class="line">  <span class="keyword">auto</span> q_obj = kernel.<span class="built_in">Load</span>(q, &amp;qk_ref, dvm::kFloat16);</span><br><span class="line">  <span class="keyword">auto</span> k_obj = kernel.<span class="built_in">Load</span>(k, &amp;qk_ref, dvm::kFloat16);</span><br><span class="line">  <span class="keyword">auto</span> v_obj = kernel.<span class="built_in">Load</span>(v, &amp;v_ref, dvm::kFloat16);</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// Q @ K^T</span></span><br><span class="line">  <span class="keyword">auto</span> scores = kernel.<span class="built_in">MatMul</span>(q_obj, k_obj, <span class="literal">false</span>, <span class="literal">true</span>, <span class="literal">nullptr</span>);</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// Scale</span></span><br><span class="line">  <span class="keyword">auto</span> scale_obj = kernel.<span class="built_in">Scalar</span>(scale);</span><br><span class="line">  <span class="keyword">auto</span> scaled_scores = kernel.<span class="built_in">Binary</span>&lt;dvm::kMul&gt;(scores, scale_obj);</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// Softmax</span></span><br><span class="line">  <span class="keyword">auto</span> max_scores = kernel.<span class="built_in">Flex</span>&lt;dvm::kMax&gt;(scaled_scores, &amp;scores_ref, <span class="literal">true</span>);</span><br><span class="line">  <span class="keyword">auto</span> shifted = kernel.<span class="built_in">Binary</span>&lt;dvm::kSub&gt;(scaled_scores, max_scores);</span><br><span class="line">  <span class="keyword">auto</span> exp_scores = kernel.<span class="built_in">Unary</span>&lt;dvm::kExp&gt;(shifted);</span><br><span class="line">  <span class="keyword">auto</span> sum_exp = kernel.<span class="built_in">Flex</span>&lt;dvm::kSum&gt;(exp_scores, &amp;scores_ref, <span class="literal">true</span>);</span><br><span class="line">  <span class="keyword">auto</span> probs = kernel.<span class="built_in">Binary</span>&lt;dvm::kDiv&gt;(exp_scores, sum_exp);</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// Probs @ V</span></span><br><span class="line">  <span class="keyword">auto</span> output = kernel.<span class="built_in">MatMul</span>(probs, v_obj, <span class="literal">false</span>, <span class="literal">false</span>, <span class="literal">nullptr</span>);</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// Store</span></span><br><span class="line">  kernel.<span class="built_in">Store</span>(out, output);</span><br><span class="line">  </span><br><span class="line">  kernel.<span class="built_in">Normalize</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="三、Flash-Attention优化"><a href="#三、Flash-Attention优化" class="headerlink" title="三、Flash Attention优化"></a>三、Flash Attention优化</h2><h3 id="3-1-Flash-Attention原理"><a href="#3-1-Flash-Attention原理" class="headerlink" title="3.1 Flash Attention原理"></a>3.1 Flash Attention原理</h3><p>Flash Attention通过Tiling和重计算减少HBM访问：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">传统Attention：</span><br><span class="line">Q, K, V -&gt; HBM -&gt; scores -&gt; HBM -&gt; probs -&gt; HBM -&gt; output</span><br><span class="line">         (O(N^2) HBM访问)</span><br><span class="line"></span><br><span class="line">Flash Attention：</span><br><span class="line">Q, K, V -&gt; 分块处理 -&gt; output</span><br><span class="line">         (O(N) HBM访问)</span><br></pre></td></tr></table></figure>
-
-<h3 id="3-2-Tiling策略"><a href="#3-2-Tiling策略" class="headerlink" title="3.2 Tiling策略"></a>3.2 Tiling策略</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@dvm.kernel(<span class="params">ktype=<span class="string">&quot;split&quot;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">flash_attention</span>(<span class="params">k, q, k_mat, v, scale, block_size=<span class="number">64</span></span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;Flash Attention实现&quot;&quot;&quot;</span></span><br><span class="line">    q = k.load(q, dvm.float16)</span><br><span class="line">    k_mat = k.load(k_mat, dvm.float16)</span><br><span class="line">    v = k.load(v, dvm.float16)</span><br><span class="line">    scale = k.scalar(scale)</span><br><span class="line">    </span><br><span class="line">    seq_len = q.shape()[<span class="number">0</span>]</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 分块处理</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">0</span>, seq_len, block_size):</span><br><span class="line">        <span class="comment"># 当前Q块</span></span><br><span class="line">        q_block = k.<span class="built_in">slice</span>(q, i, i + block_size)</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 初始化累加器</span></span><br><span class="line">        o_acc = k.zeros((block_size, d_v), dvm.float32)</span><br><span class="line">        l_acc = k.zeros((block_size, <span class="number">1</span>), dvm.float32)</span><br><span class="line">        m_acc = k.full((block_size, <span class="number">1</span>), -<span class="built_in">float</span>(<span class="string">&#x27;inf&#x27;</span>), dvm.float32)</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">for</span> j <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">0</span>, seq_len, block_size):</span><br><span class="line">            <span class="comment"># 当前K, V块</span></span><br><span class="line">            k_block = k.<span class="built_in">slice</span>(k_mat, j, j + block_size)</span><br><span class="line">            v_block = k.<span class="built_in">slice</span>(v, j, j + block_size)</span><br><span class="line">            </span><br><span class="line">            <span class="comment"># 计算scores</span></span><br><span class="line">            scores = k.matmul(q_block, k_block, <span class="literal">False</span>, <span class="literal">True</span>)</span><br><span class="line">            scores = k.mul(scores, scale)</span><br><span class="line">            </span><br><span class="line">            <span class="comment"># 更新最大值</span></span><br><span class="line">            m_new = k.maximum(m_acc, k.<span class="built_in">max</span>(scores, -<span class="number">1</span>, <span class="literal">True</span>))</span><br><span class="line">            </span><br><span class="line">            <span class="comment"># 重归一化</span></span><br><span class="line">            p = k.exp(k.sub(scores, m_new))</span><br><span class="line">            l_new = k.add(</span><br><span class="line">                k.mul(l_acc, k.exp(k.sub(m_acc, m_new))),</span><br><span class="line">                k.<span class="built_in">sum</span>(p, -<span class="number">1</span>, <span class="literal">True</span>)</span><br><span class="line">            )</span><br><span class="line">            </span><br><span class="line">            <span class="comment"># 更新输出</span></span><br><span class="line">            o_acc = k.mul(o_acc, k.exp(k.sub(m_acc, m_new)))</span><br><span class="line">            o_acc = k.add(o_acc, k.matmul(p, v_block))</span><br><span class="line">            </span><br><span class="line">            <span class="comment"># 更新累加器</span></span><br><span class="line">            m_acc = m_new</span><br><span class="line">            l_acc = l_new</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 归一化输出</span></span><br><span class="line">        o_block = k.div(o_acc, l_acc)</span><br><span class="line">        k.store_slice(o_block, i, i + block_size)</span><br></pre></td></tr></table></figure>
-
-<h3 id="3-3-DVM-Mix-Kernel优化"><a href="#3-3-DVM-Mix-Kernel优化" class="headerlink" title="3.3 DVM Mix Kernel优化"></a>3.3 DVM Mix Kernel优化</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@dvm.kernel(<span class="params">ktype=<span class="string">&quot;mix&quot;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">attention_mix</span>(<span class="params">k, q, k_mat, v, scale</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;使用Mix Kernel优化MatMul后融合&quot;&quot;&quot;</span></span><br><span class="line">    q = k.load(q, dvm.float16)</span><br><span class="line">    k_mat = k.load(k_mat, dvm.float16)</span><br><span class="line">    v = k.load(v, dvm.float16)</span><br><span class="line">    scale = k.scalar(scale)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 第一个MatMul: Q @ K^T</span></span><br><span class="line">    <span class="comment"># 后续Vector操作: Scale, Softmax</span></span><br><span class="line">    scores = k.matmul(q, k_mat, <span class="literal">False</span>, <span class="literal">True</span>)</span><br><span class="line">    scores = k.mul(scores, scale)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Softmax (Vector操作自动融合到MatMul后)</span></span><br><span class="line">    scores = k.cast(scores, dvm.float32)</span><br><span class="line">    max_scores = k.<span class="built_in">max</span>(scores, (<span class="number">1</span>,), <span class="literal">True</span>)</span><br><span class="line">    scores = k.sub(scores, max_scores)</span><br><span class="line">    exp_scores = k.exp(scores)</span><br><span class="line">    sum_exp = k.<span class="built_in">sum</span>(exp_scores, (<span class="number">1</span>,), <span class="literal">True</span>)</span><br><span class="line">    probs = k.div(exp_scores, sum_exp)</span><br><span class="line">    probs = k.cast(probs, dvm.float16)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 第二个MatMul: Probs @ V</span></span><br><span class="line">    output = k.matmul(probs, v, <span class="literal">False</span>, <span class="literal">False</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> k.store(output)</span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="四、Multi-Head-Attention实现"><a href="#四、Multi-Head-Attention实现" class="headerlink" title="四、Multi-Head Attention实现"></a>四、Multi-Head Attention实现</h2><h3 id="4-1-MHA结构"><a href="#4-1-MHA结构" class="headerlink" title="4.1 MHA结构"></a>4.1 MHA结构</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">MultiHeadAttention(Q, K, V):</span><br><span class="line">    # 分头</span><br><span class="line">    Q_heads = split(Q, num_heads)  # [batch, num_heads, seq_len, d_k]</span><br><span class="line">    K_heads = split(K, num_heads)</span><br><span class="line">    V_heads = split(V, num_heads)</span><br><span class="line">    </span><br><span class="line">    # 每个头独立计算</span><br><span class="line">    for h in range(num_heads):</span><br><span class="line">        head_output[h] = Attention(Q_heads[h], K_heads[h], V_heads[h])</span><br><span class="line">    </span><br><span class="line">    # 合并</span><br><span class="line">    output = concat(head_output)  # [batch, seq_len, d_model]</span><br><span class="line">    output = output @ W_o</span><br></pre></td></tr></table></figure>
-
-<h3 id="4-2-DVM实现"><a href="#4-2-DVM实现" class="headerlink" title="4.2 DVM实现"></a>4.2 DVM实现</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">multi_head_attention</span>(<span class="params">k, q, k_mat, v, w_o, scale, num_heads</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;Multi-Head Attention实现&quot;&quot;&quot;</span></span><br><span class="line">    batch, seq_len, d_model = q.shape()</span><br><span class="line">    d_k = d_model // num_heads</span><br><span class="line">    </span><br><span class="line">    q = k.load(q, dvm.float16)</span><br><span class="line">    k_mat = k.load(k_mat, dvm.float16)</span><br><span class="line">    v = k.load(v, dvm.float16)</span><br><span class="line">    w_o = k.load(w_o, dvm.float16)</span><br><span class="line">    scale = k.scalar(scale)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Reshape为多头</span></span><br><span class="line">    q = k.reshape(q, (batch, num_heads, seq_len, d_k))</span><br><span class="line">    k_mat = k.reshape(k_mat, (batch, num_heads, seq_len, d_k))</span><br><span class="line">    v = k.reshape(v, (batch, num_heads, seq_len, d_k))</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Q @ K^T / scale</span></span><br><span class="line">    scores = k.matmul(q, k_mat, <span class="literal">False</span>, <span class="literal">True</span>)</span><br><span class="line">    scores = k.mul(scores, scale)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Softmax</span></span><br><span class="line">    scores = k.cast(scores, dvm.float32)</span><br><span class="line">    max_scores = k.<span class="built_in">max</span>(scores, (<span class="number">3</span>,), <span class="literal">True</span>)</span><br><span class="line">    scores = k.sub(scores, max_scores)</span><br><span class="line">    exp_scores = k.exp(scores)</span><br><span class="line">    sum_exp = k.<span class="built_in">sum</span>(exp_scores, (<span class="number">3</span>,), <span class="literal">True</span>)</span><br><span class="line">    probs = k.div(exp_scores, sum_exp)</span><br><span class="line">    probs = k.cast(probs, dvm.float16)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Probs @ V</span></span><br><span class="line">    output = k.matmul(probs, v, <span class="literal">False</span>, <span class="literal">False</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Reshape回原始形状</span></span><br><span class="line">    output = k.reshape(output, (batch, seq_len, d_model))</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Output projection</span></span><br><span class="line">    output = k.matmul(output, w_o, <span class="literal">False</span>, <span class="literal">False</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> k.store(output)</span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="五、性能优化技巧"><a href="#五、性能优化技巧" class="headerlink" title="五、性能优化技巧"></a>五、性能优化技巧</h2><h3 id="5-1-数据类型优化"><a href="#5-1-数据类型优化" class="headerlink" title="5.1 数据类型优化"></a>5.1 数据类型优化</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 使用BF16提高数值稳定性</span></span><br><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">attention_bf16</span>(<span class="params">k, q, k_mat, v, scale</span>):</span><br><span class="line">    q = k.load(q, dvm.bfloat16)</span><br><span class="line">    k_mat = k.load(k_mat, dvm.bfloat16)</span><br><span class="line">    v = k.load(v, dvm.bfloat16)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># MatMul使用BF16</span></span><br><span class="line">    scores = k.matmul(q, k_mat, <span class="literal">False</span>, <span class="literal">True</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Softmax使用FP32保证精度</span></span><br><span class="line">    scores = k.cast(scores, dvm.float32)</span><br><span class="line">    max_scores = k.<span class="built_in">max</span>(scores, (<span class="number">1</span>,), <span class="literal">True</span>)</span><br><span class="line">    scores = k.sub(scores, max_scores)</span><br><span class="line">    exp_scores = k.exp(scores)</span><br><span class="line">    sum_exp = k.<span class="built_in">sum</span>(exp_scores, (<span class="number">1</span>,), <span class="literal">True</span>)</span><br><span class="line">    probs = k.div(exp_scores, sum_exp)</span><br><span class="line">    probs = k.cast(probs, dvm.bfloat16)</span><br><span class="line">    </span><br><span class="line">    output = k.matmul(probs, v, <span class="literal">False</span>, <span class="literal">False</span>)</span><br><span class="line">    <span class="keyword">return</span> k.store(output)</span><br></pre></td></tr></table></figure>
-
-<h3 id="5-2-自定义Tiling"><a href="#5-2-自定义Tiling" class="headerlink" title="5.2 自定义Tiling"></a>5.2 自定义Tiling</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">attention_custom_tile</span>(<span class="params">k, q, k_mat, v, scale</span>):</span><br><span class="line">    q = k.load(q, dvm.float16)</span><br><span class="line">    k_mat = k.load(k_mat, dvm.float16)</span><br><span class="line">    v = k.load(v, dvm.float16)</span><br><span class="line">    scale = k.scalar(scale)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 设置自定义Tiling</span></span><br><span class="line">    k.set_tile(start=<span class="number">0</span>, end=<span class="number">2</span>, num=<span class="number">128</span>, factor=<span class="number">0</span>)</span><br><span class="line">    </span><br><span class="line">    scores = k.matmul(q, k_mat, <span class="literal">False</span>, <span class="literal">True</span>)</span><br><span class="line">    scores = k.mul(scores, scale)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Softmax</span></span><br><span class="line">    scores = k.cast(scores, dvm.float32)</span><br><span class="line">    max_scores = k.<span class="built_in">max</span>(scores, (<span class="number">1</span>,), <span class="literal">True</span>)</span><br><span class="line">    scores = k.sub(scores, max_scores)</span><br><span class="line">    exp_scores = k.exp(scores)</span><br><span class="line">    sum_exp = k.<span class="built_in">sum</span>(exp_scores, (<span class="number">1</span>,), <span class="literal">True</span>)</span><br><span class="line">    probs = k.div(exp_scores, sum_exp)</span><br><span class="line">    probs = k.cast(probs, dvm.float16)</span><br><span class="line">    </span><br><span class="line">    output = k.matmul(probs, v, <span class="literal">False</span>, <span class="literal">False</span>)</span><br><span class="line">    <span class="keyword">return</span> k.store(output)</span><br></pre></td></tr></table></figure>
-
-<h3 id="5-3-图优化Pass应用"><a href="#5-3-图优化Pass应用" class="headerlink" title="5.3 图优化Pass应用"></a>5.3 图优化Pass应用</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> dvm.tester <span class="keyword">import</span> Tester</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">test_attention_with_pass</span>():</span><br><span class="line">    t = Tester(<span class="string">&quot;split&quot;</span>)</span><br><span class="line">    </span><br><span class="line">    q = np.random.randn(<span class="number">1</span>, <span class="number">1024</span>, <span class="number">64</span>).astype(np.float16)</span><br><span class="line">    k = np.random.randn(<span class="number">1</span>, <span class="number">1024</span>, <span class="number">64</span>).astype(np.float16)</span><br><span class="line">    v = np.random.randn(<span class="number">1</span>, <span class="number">1024</span>, <span class="number">64</span>).astype(np.float16)</span><br><span class="line">    </span><br><span class="line">    q_obj = t.load(q)</span><br><span class="line">    k_obj = t.load(k)</span><br><span class="line">    v_obj = t.load(v)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 构图</span></span><br><span class="line">    scores = t.matmul(q_obj, k_obj, <span class="literal">False</span>, <span class="literal">True</span>)</span><br><span class="line">    scores = t.mul(scores, <span class="number">1.0</span> / <span class="number">8.0</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Softmax</span></span><br><span class="line">    scores = t.cast(scores, dvm.float32)</span><br><span class="line">    max_scores = t.<span class="built_in">max</span>(scores, (<span class="number">2</span>,), <span class="literal">True</span>)</span><br><span class="line">    scores = t.sub(scores, max_scores)</span><br><span class="line">    exp_scores = t.exp(scores)</span><br><span class="line">    sum_exp = t.<span class="built_in">sum</span>(exp_scores, (<span class="number">2</span>,), <span class="literal">True</span>)</span><br><span class="line">    probs = t.div(exp_scores, sum_exp)</span><br><span class="line">    probs = t.cast(probs, dvm.float16)</span><br><span class="line">    </span><br><span class="line">    output = t.matmul(probs, v_obj, <span class="literal">False</span>, <span class="literal">False</span>)</span><br><span class="line">    t.store(output)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 设置优化Pass</span></span><br><span class="line">    t.set_passes(<span class="string">&quot;ReorderStore&quot;</span>, <span class="string">&quot;CompactPeakLiveness&quot;</span>, <span class="string">&quot;EliminateReshape&quot;</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 编译执行</span></span><br><span class="line">    t.codegen()</span><br><span class="line">    t.run()</span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="六、性能测试与分析"><a href="#六、性能测试与分析" class="headerlink" title="六、性能测试与分析"></a>六、性能测试与分析</h2><h3 id="6-1-测试代码"><a href="#6-1-测试代码" class="headerlink" title="6.1 测试代码"></a>6.1 测试代码</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> dvm</span><br><span class="line"><span class="keyword">from</span> dvm.tester <span class="keyword">import</span> Tester</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">benchmark_attention</span>(<span class="params">seq_len, d_k, d_v, num_runs=<span class="number">100</span></span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;性能测试&quot;&quot;&quot;</span></span><br><span class="line">    q = np.random.randn(<span class="number">1</span>, seq_len, d_k).astype(np.float16)</span><br><span class="line">    k = np.random.randn(<span class="number">1</span>, seq_len, d_k).astype(np.float16)</span><br><span class="line">    v = np.random.randn(<span class="number">1</span>, seq_len, d_v).astype(np.float16)</span><br><span class="line">    scale = <span class="number">1.0</span> / np.sqrt(d_k)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 预热</span></span><br><span class="line">    <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">10</span>):</span><br><span class="line">        output = attention_basic(q, k, v, scale)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 测试</span></span><br><span class="line">    times = []</span><br><span class="line">    <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(num_runs):</span><br><span class="line">        start = time.time()</span><br><span class="line">        output = attention_basic(q, k, v, scale)</span><br><span class="line">        end = time.time()</span><br><span class="line">        times.append((end - start) * <span class="number">1000</span>)  <span class="comment"># ms</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> &#123;</span><br><span class="line">        <span class="string">&#x27;min&#x27;</span>: <span class="built_in">min</span>(times),</span><br><span class="line">        <span class="string">&#x27;max&#x27;</span>: <span class="built_in">max</span>(times),</span><br><span class="line">        <span class="string">&#x27;mean&#x27;</span>: np.mean(times),</span><br><span class="line">        <span class="string">&#x27;std&#x27;</span>: np.std(times),</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 运行测试</span></span><br><span class="line">results = &#123;&#125;</span><br><span class="line"><span class="keyword">for</span> seq_len <span class="keyword">in</span> [<span class="number">256</span>, <span class="number">512</span>, <span class="number">1024</span>, <span class="number">2048</span>]:</span><br><span class="line">    results[seq_len] = benchmark_attention(seq_len, <span class="number">64</span>, <span class="number">64</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;seq_len=<span class="subst">&#123;seq_len&#125;</span>: <span class="subst">&#123;results[seq_len][<span class="string">&#x27;mean&#x27;</span>]:<span class="number">.3</span>f&#125;</span> ms&quot;</span>)</span><br></pre></td></tr></table></figure>
-
-<h3 id="6-2-性能对比"><a href="#6-2-性能对比" class="headerlink" title="6.2 性能对比"></a>6.2 性能对比</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">compare_implementations</span>():</span><br><span class="line">    <span class="string">&quot;&quot;&quot;对比不同实现的性能&quot;&quot;&quot;</span></span><br><span class="line">    seq_len = <span class="number">1024</span></span><br><span class="line">    d_k = d_v = <span class="number">64</span></span><br><span class="line">    </span><br><span class="line">    q = np.random.randn(<span class="number">1</span>, seq_len, d_k).astype(np.float16)</span><br><span class="line">    k = np.random.randn(<span class="number">1</span>, seq_len, d_k).astype(np.float16)</span><br><span class="line">    v = np.random.randn(<span class="number">1</span>, seq_len, d_v).astype(np.float16)</span><br><span class="line">    scale = <span class="number">1.0</span> / np.sqrt(d_k)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># PyTorch实现</span></span><br><span class="line">    <span class="keyword">import</span> torch</span><br><span class="line">    <span class="keyword">import</span> torch.nn.functional <span class="keyword">as</span> F</span><br><span class="line">    </span><br><span class="line">    q_torch = torch.from_numpy(q).cuda()</span><br><span class="line">    k_torch = torch.from_numpy(k).cuda()</span><br><span class="line">    v_torch = torch.from_numpy(v).cuda()</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 预热</span></span><br><span class="line">    <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">10</span>):</span><br><span class="line">        F.scaled_dot_product_attention(q_torch, k_torch, v_torch)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 测试PyTorch</span></span><br><span class="line">    torch.cuda.synchronize()</span><br><span class="line">    start = time.time()</span><br><span class="line">    <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">100</span>):</span><br><span class="line">        F.scaled_dot_product_attention(q_torch, k_torch, v_torch)</span><br><span class="line">    torch.cuda.synchronize()</span><br><span class="line">    end = time.time()</span><br><span class="line">    torch_time = (end - start) * <span class="number">1000</span> / <span class="number">100</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 测试DVM</span></span><br><span class="line">    dvm_time = benchmark_attention(seq_len, d_k, d_v)[<span class="string">&#x27;mean&#x27;</span>]</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;PyTorch: <span class="subst">&#123;torch_time:<span class="number">.3</span>f&#125;</span> ms&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;DVM: <span class="subst">&#123;dvm_time:<span class="number">.3</span>f&#125;</span> ms&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;Speedup: <span class="subst">&#123;torch_time / dvm_time:<span class="number">.2</span>f&#125;</span>x&quot;</span>)</span><br></pre></td></tr></table></figure>
-
-<h3 id="6-3-Profiling分析"><a href="#6-3-Profiling分析" class="headerlink" title="6.3 Profiling分析"></a>6.3 Profiling分析</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">profile_attention</span>():</span><br><span class="line">    <span class="string">&quot;&quot;&quot;Profiling分析&quot;&quot;&quot;</span></span><br><span class="line">    t = Tester(<span class="string">&quot;split&quot;</span>)</span><br><span class="line">    </span><br><span class="line">    q = np.random.randn(<span class="number">1</span>, <span class="number">1024</span>, <span class="number">64</span>).astype(np.float16)</span><br><span class="line">    k = np.random.randn(<span class="number">1</span>, <span class="number">1024</span>, <span class="number">64</span>).astype(np.float16)</span><br><span class="line">    v = np.random.randn(<span class="number">1</span>, <span class="number">1024</span>, <span class="number">64</span>).astype(np.float16)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># ... 构图 ...</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 运行Profiling</span></span><br><span class="line">    t.run_msprof(<span class="string">&quot;./profiling_output&quot;</span>, test_num=<span class="number">100</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 分析结果</span></span><br><span class="line">    <span class="comment"># 使用msprof工具分析生成的数据</span></span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="七、完整示例"><a href="#七、完整示例" class="headerlink" title="七、完整示例"></a>七、完整示例</h2><h3 id="7-1-带Mask的Attention"><a href="#7-1-带Mask的Attention" class="headerlink" title="7.1 带Mask的Attention"></a>7.1 带Mask的Attention</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">attention_with_mask</span>(<span class="params">k, q, k_mat, v, mask, scale</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;带Mask的Attention&quot;&quot;&quot;</span></span><br><span class="line">    q = k.load(q, dvm.float16)</span><br><span class="line">    k_mat = k.load(k_mat, dvm.float16)</span><br><span class="line">    v = k.load(v, dvm.float16)</span><br><span class="line">    mask = k.load(mask, dvm.bool_)</span><br><span class="line">    scale = k.scalar(scale)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Q @ K^T</span></span><br><span class="line">    scores = k.matmul(q, k_mat, <span class="literal">False</span>, <span class="literal">True</span>)</span><br><span class="line">    scores = k.mul(scores, scale)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Apply mask</span></span><br><span class="line">    scores = k.cast(scores, dvm.float32)</span><br><span class="line">    scores = k.select(mask, scores, -<span class="number">1e9</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Softmax</span></span><br><span class="line">    max_scores = k.<span class="built_in">max</span>(scores, (<span class="number">1</span>,), <span class="literal">True</span>)</span><br><span class="line">    scores = k.sub(scores, max_scores)</span><br><span class="line">    exp_scores = k.exp(scores)</span><br><span class="line">    sum_exp = k.<span class="built_in">sum</span>(exp_scores, (<span class="number">1</span>,), <span class="literal">True</span>)</span><br><span class="line">    probs = k.div(exp_scores, sum_exp)</span><br><span class="line">    probs = k.cast(probs, dvm.float16)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Probs @ V</span></span><br><span class="line">    output = k.matmul(probs, v, <span class="literal">False</span>, <span class="literal">False</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> k.store(output)</span><br></pre></td></tr></table></figure>
-
-<h3 id="7-2-Cross-Attention"><a href="#7-2-Cross-Attention" class="headerlink" title="7.2 Cross Attention"></a>7.2 Cross Attention</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">cross_attention</span>(<span class="params">k, q, k_mat, v, scale</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;Cross Attention (Encoder-Decoder Attention)&quot;&quot;&quot;</span></span><br><span class="line">    <span class="comment"># Q来自Decoder: [batch, tgt_len, d_k]</span></span><br><span class="line">    <span class="comment"># K, V来自Encoder: [batch, src_len, d_k/d_v]</span></span><br><span class="line">    </span><br><span class="line">    q = k.load(q, dvm.float16)      <span class="comment"># [batch, tgt_len, d_k]</span></span><br><span class="line">    k_mat = k.load(k_mat, dvm.float16)  <span class="comment"># [batch, src_len, d_k]</span></span><br><span class="line">    v = k.load(v, dvm.float16)      <span class="comment"># [batch, src_len, d_v]</span></span><br><span class="line">    scale = k.scalar(scale)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Q @ K^T: [batch, tgt_len, src_len]</span></span><br><span class="line">    scores = k.matmul(q, k_mat, <span class="literal">False</span>, <span class="literal">True</span>)</span><br><span class="line">    scores = k.mul(scores, scale)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Softmax</span></span><br><span class="line">    scores = k.cast(scores, dvm.float32)</span><br><span class="line">    max_scores = k.<span class="built_in">max</span>(scores, (<span class="number">2</span>,), <span class="literal">True</span>)</span><br><span class="line">    scores = k.sub(scores, max_scores)</span><br><span class="line">    exp_scores = k.exp(scores)</span><br><span class="line">    sum_exp = k.<span class="built_in">sum</span>(exp_scores, (<span class="number">2</span>,), <span class="literal">True</span>)</span><br><span class="line">    probs = k.div(exp_scores, sum_exp)</span><br><span class="line">    probs = k.cast(probs, dvm.float16)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Probs @ V: [batch, tgt_len, d_v]</span></span><br><span class="line">    output = k.matmul(probs, v, <span class="literal">False</span>, <span class="literal">False</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> k.store(output)</span><br></pre></td></tr></table></figure>
-
-<h3 id="7-3-Grouped-Query-Attention-GQA"><a href="#7-3-Grouped-Query-Attention-GQA" class="headerlink" title="7.3 Grouped Query Attention (GQA)"></a>7.3 Grouped Query Attention (GQA)</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">grouped_query_attention</span>(<span class="params">k, q, k_mat, v, scale, num_groups</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;Grouped Query Attention&quot;&quot;&quot;</span></span><br><span class="line">    batch, seq_len, d_model = q.shape()</span><br><span class="line">    num_heads = d_model * <span class="number">2</span> // d_model  <span class="comment"># 假设d_k = d_v</span></span><br><span class="line">    heads_per_group = num_heads // num_groups</span><br><span class="line">    </span><br><span class="line">    q = k.load(q, dvm.float16)</span><br><span class="line">    k_mat = k.load(k_mat, dvm.float16)</span><br><span class="line">    v = k.load(v, dvm.float16)</span><br><span class="line">    scale = k.scalar(scale)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Reshape</span></span><br><span class="line">    q = k.reshape(q, (batch, num_heads, seq_len, d_model // num_heads))</span><br><span class="line">    k_mat = k.reshape(k_mat, (batch, num_groups, seq_len, d_model // num_heads))</span><br><span class="line">    v = k.reshape(v, (batch, num_groups, seq_len, d_model // num_heads))</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 扩展K, V以匹配Q的头数</span></span><br><span class="line">    <span class="comment"># 这里需要广播操作</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 计算Attention</span></span><br><span class="line">    <span class="comment"># ...</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> k.store(output)</span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="八、最佳实践"><a href="#八、最佳实践" class="headerlink" title="八、最佳实践"></a>八、最佳实践</h2><h3 id="8-1-实现建议"><a href="#8-1-实现建议" class="headerlink" title="8.1 实现建议"></a>8.1 实现建议</h3><table>
-<thead>
-<tr>
-<th>建议</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>使用Mix Kernel</td>
-<td>MatMul后接Vector操作自动融合</td>
-</tr>
-<tr>
-<td>选择合适的数据类型</td>
-<td>BF16用于训练，FP16用于推理</td>
-</tr>
-<tr>
-<td>自定义Tiling</td>
-<td>根据问题规模调整Tile大小</td>
-</tr>
-<tr>
-<td>启用图优化</td>
-<td>使用ReorderStore等Pass优化</td>
-</tr>
-</tbody></table>
-<h3 id="8-2-调试技巧"><a href="#8-2-调试技巧" class="headerlink" title="8.2 调试技巧"></a>8.2 调试技巧</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Dump计算图</span></span><br><span class="line"><span class="meta">@dvm.kernel</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">debug_attention</span>(<span class="params">k, q, k_mat, v, scale</span>):</span><br><span class="line">    q = k.load(q, dvm.float16)</span><br><span class="line">    k_mat = k.load(k_mat, dvm.float16)</span><br><span class="line">    v = k.load(v, dvm.float16)</span><br><span class="line">    </span><br><span class="line">    scores = k.matmul(q, k_mat, <span class="literal">False</span>, <span class="literal">True</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 打印中间结果Shape</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;scores shape: <span class="subst">&#123;scores.shape()&#125;</span>&quot;</span>)</span><br><span class="line">    </span><br><span class="line">    scores = k.mul(scores, scale)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># ... 后续操作 ...</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> k.store(output)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 反汇编字节码</span></span><br><span class="line">output = debug_attention(q, k, v, scale)</span><br><span class="line"><span class="built_in">print</span>(debug_attention.das())</span><br></pre></td></tr></table></figure>
-
-<h3 id="8-3-常见问题"><a href="#8-3-常见问题" class="headerlink" title="8.3 常见问题"></a>8.3 常见问题</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 问题1: 数值溢出</span></span><br><span class="line"><span class="comment"># 解决: 使用FP32进行Softmax计算</span></span><br><span class="line">scores = k.cast(scores, dvm.float32)  <span class="comment"># 转换为FP32</span></span><br><span class="line"><span class="comment"># ... softmax计算 ...</span></span><br><span class="line">probs = k.cast(probs, dvm.float16)    <span class="comment"># 转回FP16</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 问题2: 内存不足</span></span><br><span class="line"><span class="comment"># 解决: 使用Split Kernel自动拆分</span></span><br><span class="line"><span class="meta">@dvm.kernel(<span class="params">ktype=<span class="string">&quot;split&quot;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">attention_split</span>(<span class="params">...</span>):</span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 问题3: 性能不佳</span></span><br><span class="line"><span class="comment"># 解决: 使用Tuning优化</span></span><br><span class="line"><span class="keyword">from</span> dvm.tuner <span class="keyword">import</span> Tuner</span><br><span class="line">tuner = Tuner()</span><br><span class="line">tuner.tune(attention_kernel)</span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="九、总结"><a href="#九、总结" class="headerlink" title="九、总结"></a>九、总结</h2><p>本文通过Attention算子的优化实践，展示了DVM的强大能力：</p>
-<ol>
-<li><strong>基础实现</strong>：理解Attention的计算流程</li>
-<li><strong>Flash Attention</strong>：Tiling和重计算优化</li>
-<li><strong>Mix Kernel</strong>：MatMul与Vector操作融合</li>
-<li><strong>Multi-Head Attention</strong>：多头注意力实现</li>
-<li><strong>性能优化</strong>：数据类型、Tiling、图优化</li>
-<li><strong>性能测试</strong>：Benchmark和Profiling</li>
-<li><strong>高级变体</strong>：Masked Attention、Cross Attention、GQA</li>
-</ol>
-<p>DVM为Attention算子优化提供了灵活高效的工具，通过合理的策略可以实现显著的性能提升。</p>
-<hr>
-<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
-<li><a target="_blank" rel="noopener" href="https://gitcode.com/mindspore/dvm">DVM官方仓库</a></li>
-<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2205.14135">Flash Attention论文</a></li>
-<li><a href="../examples/03_attention.py">examples&#x2F;03_attention.py</a></li>
-<li><a href="../docs/tutorial.md">用户开发指南</a></li>
 </ul>
 
       
