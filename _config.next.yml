@@ -1,0 +1,50 @@
+# 主题风格
+scheme: Pisces
+# Muse | Mist | Pisces | Gemini
+
+# 深色模式
+darkmode: true
+
+# 菜单
+menu:
+  home: / || fa fa-home
+  archives: /archives/ || fa fa-archive
+  tags: /tags/ || fa fa-tags
+
+# 社交链接
+social:
+  GitHub: https://github.com/chujinjin101 || fab fa-github
+  Email: mailto:you@example.com || fa fa-envelope
+
+# 头像
+avatar:
+  url: /images/mine.png
+  rounded: true
+
+# 文章目录
+toc:
+  enable: true
+  number: true
+  wrap: false
+
+# 页脚
+footer:
+  since: 2025
+
+# 代码高亮
+codeblock:
+  copy_button:
+    enable: true
+
+# 返回顶部
+back2top:
+  enable: true
+  sidebar: true
+
+# 阅读进度条
+reading_progress:
+  enable: true
+
+# # 本地搜索
+# local_search:
+#   enable: true
